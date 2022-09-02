@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { ApiClient, InstanceView } from '../ApiService'; // сервис для работы с апи c#
+//import { ApiClient, InstanceView } from '../ApiService'; // сервис для работы с апи c#
 
 @Injectable({
   providedIn: 'root'
@@ -10,10 +10,10 @@ import { ApiClient, InstanceView } from '../ApiService'; // сервис для 
 export class InstanceServiceService {
 
   // Модель экземпляра
-  instanceView = new BehaviorSubject<InstanceView | undefined>(undefined);
+  //instanceView = new BehaviorSubject<InstanceView | undefined>(undefined);
 
   constructor(
-    private apiClient: ApiClient,
+    //private apiClient: ApiClient,
   ) { }
 
   // Добавить новый экземпляр книги

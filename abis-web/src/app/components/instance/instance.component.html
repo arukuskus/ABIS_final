@@ -2,27 +2,72 @@
 <button
     nz-button
     nzType="primary"
-    [disabled]="useForm.value.receiptName == 0 || useForm.value.info == 0"
-    
-    (click)="addInstance()">
+    (click)="addInstance()"
+    [disabled]="!(isFormValid$ | async)"
+    [nzLoading]="isLoading$ | async">
     Add Instance
 </button>
 
-<button nz-button nzType="default" routerLink="/receipts">Back</button>
+<button nz-button nzType="link" routerLink="/receipts">Back</button>
 
 
 <!-- Форма заполнения экземпляров книг -->
-<form class="instance-form" [formGroup]="useForm">
-    <div class="form-group">
-        <label for="receiptName">Receipt Name:</label>
-        <input nz-input nzSize="default" placeholder="enter Receipt Name" type="text" id="receiptName" formControlName="receiptName" />
-    </div>
+<form nz-form class="instance-form" [formGroup]="useForm" (ngSubmit)="submitForm()">
 
-    <div class="form-group">
-        <label for="info">All info about book:</label>
-        <input nz-input nzSize="default" placeholder="enter info about book" type="text" id="info" formControlName="info" />
-    </div>
+    <nz-form-item>
+        <nz-form-label [nzSm]="11" [nzXs]="24" nzRequired nzFor="receiptName">Receipt Name:</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="The input is not valid Receipt Name!">
+            <input  
+                nz-input nzSize="default" 
+                placeholder="enter Receipt Name" 
+                type="text" 
+                class="form-control" 
+                id="receiptName" 
+                formControlName="receiptName" 
+                
+                />
+        </nz-form-control>
+        
+    </nz-form-item>
+
+    <nz-form-item>
+        <nz-form-label [nzSm]="13" [nzXs]="24" nzFor="info" nzRequired>All info about book:</nz-form-label>
+        <nz-form-control [nzSm]="17" [nzXs]="24" nzErrorTip="Please input info about book!">
+            <input 
+                nz-input 
+                nzSize="default" 
+                placeholder="enter info about book" 
+                type="text" 
+                id="info" 
+                formControlName="info" 
+                
+            />
+        </nz-form-control>
+       
+        <!--Что - то не хочет давать блокировать инпут-->
+        <!--[disabled]="isLoading$ | async"--> 
+    </nz-form-item>
 </form>
+
+<!-- Таблица экземпляров -->
+<div>
+    <nz-table [nzData]="instances">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Date Created</th>
+          </tr>
+        </thead>
+    
+        <tbody>
+          <tr *ngFor="let instance of instances">
+            <td>{{instance.receiptName}}</td>
+            <td>{{instance.info}}</td>
+          </tr>
+        </tbody>
+    </nz-table>
+</div>
+
 
 <!-- Тестик реактивной формы -->
 <div>{{useForm.value | json}}</div>

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ssrT45X9r4DKeC2nCrGhhso4G94tQQuee/LoihxCRMnPRuik/0AhoAde3yOEY1URdHimWURRCs0UuXfrpjr/SA==",
+  "dgSpecHash": "Aajd6/KwUOpxK3DPvwUFp0JE06d5NvAKgbBJ4hCh3tRTXmFAyYcN51iKf/7I+QSaRlSkVdjrwY2AgFxEfX3eVQ==",
   "success": true,
-  "projectFilePath": "C:\\Progects\\ABIS_2\\ABIS.Main\\ABIS.Main\\ABIS.Main.csproj",
+  "projectFilePath": "C:\\Progects\\ABIS_final\\ABIS.Main\\ABIS.Main\\ABIS.Main.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\zyabliceva\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",
     "C:\\Users\\zyabliceva\\.nuget\\packages\\microsoft.entityframeworkcore\\6.0.8\\microsoft.entityframeworkcore.6.0.8.nupkg.sha512",

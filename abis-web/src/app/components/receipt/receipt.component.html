@@ -1,10 +1,13 @@
 
 <!-- Кнопочки -->
 <button nz-button nzType="primary" routerLink="/instance">Add Instance</button> 
-<button nz-button nzType="default" routerLink="/">Back</button>
+<button nz-button nzType="link" routerLink="/">Back</button>
 
 <!-- Табличка поступлений ng-zorro -->
 <div>
+  <button nz-button nzType="link" routerLink="/receipts">Receipts</button>
+  <button nz-button nzType="link" >Instances</button>
+
     <nz-table [nzData]="receipts">
         <thead>
           <tr>

@@ -28,7 +28,7 @@ namespace ABIS.Main.Controllers
         /// </summary>
         [HttpGet]
         [Route("receipts")]
-        public List<ReceiptView> GetInstances()
+        public List<ReceiptView> GetReceipts()
         {
             var receipts = new List<ReceiptView>(); // Список поступлений
 
@@ -46,16 +46,39 @@ namespace ABIS.Main.Controllers
         }
 
         /// <summary>
+        /// Посмотреть все экземпляры
+        /// </summary>
+        [HttpGet]
+        [Route("instances")]
+        public List<InstanceView> GetInstances()
+        {
+            var instances = new List<InstanceView>();
+
+            foreach(var instance in _aBISContext.Instances)
+            {
+                instances.Add(new InstanceView
+                {
+                    Id = instance.Id,
+                    ReceiptName = instance.ReceiptName,
+                    Info = instance.Info
+                });
+            }
+
+            return instances;
+        }
+
+        /// <summary>
         /// Добавление новой книги
         /// </summary>
         [HttpPost]
         [Route("add_instance")]
-        public async Task<Models.EmptyResult> AddNewInstance([FromBody] InstanceView instance)
+        public async Task<bool> AddNewInstance([FromBody] InstanceView instance)
         {
 
             if (instance.Info == null || instance.ReceiptName == null)
             {
-                throw new Exception("Вы пытаетесь добавить пустой экземпляр");
+                //throw new Exception("Вы пытаетесь добавить пустой экземпляр");
+                return false;
             }
 
             // Открываем ранзакцию
@@ -69,7 +92,8 @@ namespace ABIS.Main.Controllers
 
                 if (book != null)
                 {
-                    throw new Exception("Такой экземпляр уже есть");
+                    //throw new Exception("Такой экземпляр уже есть");
+                    return false;
                 }
 
                 // Проверяем что поступление существует в бд
@@ -78,7 +102,8 @@ namespace ABIS.Main.Controllers
                                     select r).SingleOrDefaultAsync();
                 if(receipt == null)
                 {
-                    throw new Exception("Такого поступления не существует, пожалуйста выберете существующее поступление!");
+                    // throw new Exception("Такого поступления не существует, пожалуйста выберете существующее поступление!");
+                    return false;
                 }
 
                 _aBISContext.Instances.Add(new Instance
@@ -92,7 +117,7 @@ namespace ABIS.Main.Controllers
                 await _aBISContext.SaveChangesAsync();
                 await context.CommitAsync(); // Еще выведем комментарии
 
-                return new Models.EmptyResult();
+                return true;
             }
         }
     }

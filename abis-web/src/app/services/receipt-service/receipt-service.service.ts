@@ -10,7 +10,7 @@ import { ApiClient, ReceiptView } from '../ApiService';
 export class ReceiptServiceService {
 
   constructor(
-    private apiClient: ApiClient
+    private apiClient: ApiClient,
   ) { }
 
   // Показать список поступлений

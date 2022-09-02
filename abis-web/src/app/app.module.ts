@@ -12,7 +12,7 @@ import { InitialAuthService } from "./services/auth-service/InitialAuthService";
 import { AuthModule } from './auth/auth.module';
 import { InstanceComponent } from './components/instance/instance.component';
 import { ReceiptComponent } from './components/receipt/receipt.component';
-import { BASE_URL } from './services/ApiService';
+import { API_BASE_URL } from './services/ApiService';
 import { registerLocaleData } from '@angular/common';
 import en from '@angular/common/locales/en';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -25,6 +25,7 @@ import { NzGridModule } from 'ng-zorro-antd/grid'; // Это сеточка
 import { NzTableModule } from 'ng-zorro-antd/table'; // Это табличка
 import { NzButtonModule } from 'ng-zorro-antd/button'; // Это кнопочка
 import { NzInputModule } from 'ng-zorro-antd/input'; // Это инпуты
+import { NzFormModule } from 'ng-zorro-antd/form'; // Это форма
 
 registerLocaleData(en);
 
@@ -38,11 +39,12 @@ registerLocaleData(en);
     ReceiptComponent
   ],
   imports: [
+    NzFormModule,
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
     FormsModule,
-    ReactiveFormsModule,  // чтобы работали реактиынфе формы
+    ReactiveFormsModule,  // чтобы работали реактивные формы
     BrowserAnimationsModule,
     IconsProviderModule,
     NzLayoutModule,
@@ -51,12 +53,11 @@ registerLocaleData(en);
     NzTableModule,
     NzButtonModule,
     NzInputModule
-
     //AuthModule
   ],
   providers: [
     {
-      provide: BASE_URL,
+      provide: API_BASE_URL,
       useValue: "https://localhost:7155"
     },
     { provide: NZ_I18N, useValue: en_US },
