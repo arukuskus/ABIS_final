@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "Hash": "qNvII9DBnUCEn34TuURXcnGgszXlEi64d6aPRsOFI1Y=",
+  "Source": "ABIS.Main",
+  "BasePath": "_content/ABIS.Main",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "ABIS.Main\\wwwroot",
+      "Source": "ABIS.Main",
+      "ContentRoot": "C:\\Progects\\ABIS_2\\ABIS.Main\\ABIS.Main\\wwwroot\\",
+      "BasePath": "_content/ABIS.Main",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Progects\\ABIS_2\\ABIS.Main\\ABIS.Main\\wwwroot\\Index.html",
+      "SourceId": "ABIS.Main",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Progects\\ABIS_2\\ABIS.Main\\ABIS.Main\\wwwroot\\",
+      "BasePath": "_content/ABIS.Main",
+      "RelativePath": "Index.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\Index.html"
+    }
+  ]
+}

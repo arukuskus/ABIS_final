@@ -1,0 +1,22 @@
+<form>
+  <div>
+    <label>Логин</label>
+    <input
+      type="text"
+      [(ngModel)] = "loginForm.login"
+      id="login"
+      required name="login"
+    />
+  </div>
+  <div>
+    <label>Пароль</label>
+    <input
+      type="password"
+      [(ngModel)]="loginForm.password"
+      id="passwors"
+      required name="password" />
+  </div>
+
+  <!--Вызываем авторизацию-->
+  <button (click)="login()">Войти</button>
+</form>
