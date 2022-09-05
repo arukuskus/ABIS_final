@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ReceiptServiceService } from 'src/app/services/receipt-service/receipt-service.service';
 import { ReceiptView } from 'src/app/services/ApiService';
+import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 
 @Component({
   selector: 'app-receipt',
@@ -14,23 +15,28 @@ export class ReceiptComponent implements OnInit {
   // Список поступлений
   receipts: ReceiptView[] = [];
 
+  receipt = new ReceiptView();
+
+  id: string | undefined
+
   // Модель одного поступления
   //receipt: ReceiptView | undefined; 
 
   constructor(
-    private receiptService: ReceiptServiceService
+    private receiptService: ReceiptServiceService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
-    // Определяем список поступлений - так делают только если в компоненте нужно следить за изменением данных
-    // Выгрузка данных к этому не относится, тут надо подумать как вынести ее отсюда
+
+    this.route.params.subscribe(
+      params =>  this.id = params['id']
+    );
+
     this.receiptService.showReceipts().subscribe(
       (data) => {
         this.receipts = data;
       }
     )
   }
-
-
-
 }

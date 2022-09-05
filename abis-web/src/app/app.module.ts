@@ -25,7 +25,11 @@ import { NzGridModule } from 'ng-zorro-antd/grid'; // Это сеточка
 import { NzTableModule } from 'ng-zorro-antd/table'; // Это табличка
 import { NzButtonModule } from 'ng-zorro-antd/button'; // Это кнопочка
 import { NzInputModule } from 'ng-zorro-antd/input'; // Это инпуты
-import { NzFormModule } from 'ng-zorro-antd/form'; // Это форма
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { InstancesComponent } from './components/instances/instances.component';
+import { ReceiptPageComponent } from './components/receipt-page/receipt-page.component';
+import { ReceiptInfoComponent } from './components/receipt-info/receipt-info.component';
+import { ReceiptListComponent } from './components/receipt-list/receipt-list.component';
 
 registerLocaleData(en);
 
@@ -36,7 +40,11 @@ registerLocaleData(en);
     HomePageComponent,
     UserPageComponent,
     InstanceComponent,
-    ReceiptComponent
+    ReceiptComponent,
+    InstancesComponent,
+    ReceiptPageComponent,
+    ReceiptListComponent,
+    ReceiptInfoComponent
   ],
   imports: [
     NzFormModule,

@@ -1,13 +1,11 @@
+<p>receipt-list works!</p>
 
-<!-- Кнопочки -->
-<!-- <button nz-button nzType="primary" routerLink="/instance">Add instance</button>  -->
+
+<button nz-button nzType="primary">Add receipt</button>
 <button nz-button nzType="link" routerLink="/">Back</button>
 
 <!-- Табличка поступлений ng-zorro -->
   <div>
-    <button nz-button nzType="link" routerLink="/receipts">Receipts</button>
-    <button nz-button nzType="link" routerLink="receipts/instances">Instances</button>
-  
     <div>
       <nz-table [nzData]="receipts">
           <thead>
@@ -19,7 +17,8 @@
       
           <tbody>
             <tr *ngFor="let receipt of receipts">
-              <td>{{receipt.name}}</td>
+        
+              <td> <a (click)="goTo(receipt.id)"> {{receipt.name}} </a></td>
               <td>{{receipt.createdDate}}</td>
             </tr>
           </tbody>

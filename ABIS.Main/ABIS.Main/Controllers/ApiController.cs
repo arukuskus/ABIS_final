@@ -46,6 +46,47 @@ namespace ABIS.Main.Controllers
         }
 
         /// <summary>
+        /// Получить поступлеие по id (вместе с экземплярами книг)
+        /// </summary>
+        [HttpGet]
+        [Route("receipt")]
+        public async Task<ReceiptFromIdResult> GetReceiptFromId(Guid id)
+        {
+            // Результат
+            var result = new ReceiptFromIdResult();
+            // поступление
+            var receipt = await (from r in _aBISContext.Receipts
+                                 where r.Id == id
+                                 select r).SingleOrDefaultAsync();
+
+            if (receipt == null)
+            {
+                throw new Exception("такого поступления не существует");
+            }
+
+            result.Id = receipt.Id;
+            result.Name = receipt.Name;
+            result.CreatedDate = receipt.CreatedDate;
+
+            // Обрабатываем все книги, которые есть в этом поступлении
+            foreach (var i in _aBISContext.Instances)
+            {
+                if (i.ReceiptName == receipt.Name)
+                {
+                    result.Instances.Add(new InstanceView
+                    {
+                        Id = i.Id,
+                        ReceiptName = i.ReceiptName,
+                        Info = i.Info,
+                    });
+                }
+            }
+
+            return result;
+
+        }
+
+        /// <summary>
         /// Посмотреть все экземпляры
         /// </summary>
         [HttpGet]

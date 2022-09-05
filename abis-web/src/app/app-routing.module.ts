@@ -2,12 +2,38 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { HomePageComponent } from './components/home-page/home-page.component';
 import { InstanceComponent } from './components/instance/instance.component';
+import { InstancesComponent } from './components/instances/instances.component';
+import { ReceiptInfoComponent } from './components/receipt-info/receipt-info.component';
+import { ReceiptListComponent } from './components/receipt-list/receipt-list.component';
+import { ReceiptPageComponent } from './components/receipt-page/receipt-page.component';
 import { ReceiptComponent } from './components/receipt/receipt.component';
 
 const routes: Routes = [
+ 
+  // главная страница
   { path: '', component: HomePageComponent },
-  { path: 'receipts', component: ReceiptComponent },
-  { path: 'instance', component: InstanceComponent }
+  // страница постулений
+  { 
+    path: 'receipts', 
+    component: ReceiptPageComponent, //заголовок и router
+    pathMatch: 'prefix',
+    children: [
+      {path: '', component: ReceiptListComponent,  pathMatch: 'full'}, //список поступлений ListReceiptsComponent
+      {path: ':id', component: ReceiptInfoComponent, pathMatch: 'full'} //receiptCardComponent- tab1, tab2
+    ]
+ },
+
+  { 
+    path: 'instance', 
+    component: InstanceComponent,
+    pathMatch: 'prefix',
+    children: [
+      { path: 'instances', component: InstancesComponent, pathMatch: 'full' },
+    ] 
+  },
+
+
+  { path: '**', component: HomePageComponent } // универсальный маршрут
   //{ path: '', pathMatch: 'full', redirectTo: '/welcome' },
   //{ path: 'welcome', loadChildren: () => import('./pages/welcome/welcome.module').then(m => m.WelcomeModule) }
 ];

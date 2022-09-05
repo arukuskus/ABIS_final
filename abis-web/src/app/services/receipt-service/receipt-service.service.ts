@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { ApiClient, ReceiptView } from '../ApiService';
 
 @Injectable({
@@ -8,6 +8,8 @@ import { ApiClient, ReceiptView } from '../ApiService';
 
 // Сервис для работы с поступлениями
 export class ReceiptServiceService {
+
+  data$ = new BehaviorSubject<any>('none'); // пусть здесь будут данные, которые долы отображаться в таблице
 
   constructor(
     private apiClient: ApiClient,

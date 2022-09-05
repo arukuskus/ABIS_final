@@ -3,7 +3,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { InstanceServiceService } from 'src/app/services/instance-service/instance-service.service';
 import { AddClient, ApiClient, InstanceView } from 'src/app/services/ApiService';
 import { BehaviorSubject } from 'rxjs';
-//import { text } from 'express';
 
 @Component({
   selector: 'app-instance',
@@ -19,7 +18,7 @@ export class InstanceComponent implements OnInit {
   instance = new InstanceView; // и наж этим я тупила 30 минут )))
   isFormValid$ = new BehaviorSubject<boolean>(false);
   isLoading$ = new BehaviorSubject<boolean>(false);  // спиннер загрузки (наблюдаемое)
-  instances: InstanceView[] = [];
+  //instances: InstanceView[] = [];
 
   constructor(
     private instanceService: InstanceServiceService,
@@ -44,7 +43,7 @@ export class InstanceComponent implements OnInit {
       }
     });
 
-    this.getInstances();
+    //this.getInstances();
   }
   
   // Реактивная форма
@@ -70,13 +69,13 @@ export class InstanceComponent implements OnInit {
     }
   }
 
-  getInstances() : void {
-    this.apiClient2.instances().subscribe(
-      data => {
-        this.instances = data
-      }
-    )
-  }
+  // getInstances() : void {
+  //   this.apiClient2.instances().subscribe(
+  //     data => {
+  //       this.instances = data
+  //     }
+  //   )
+  // }
 
   addInstance() : void {  
      if(this.useForm != null) {
