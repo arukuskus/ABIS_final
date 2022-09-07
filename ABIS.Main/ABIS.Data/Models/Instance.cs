@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,5 +30,9 @@ namespace ABIS.Data.Models
         /// </summary>
         [Required]
         public string Info { get; set; }
+
+        [ForeignKey(nameof(Receipt))]
+        public Guid RecieptId { get; set; }
+        public Receipt Receipt { get; set; }
     }
 }

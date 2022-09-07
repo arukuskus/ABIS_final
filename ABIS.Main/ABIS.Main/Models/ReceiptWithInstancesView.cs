@@ -3,7 +3,7 @@
     /// <summary>
     /// Возвращает посупление и список экземпляров этого поступления 
     /// </summary>
-    public class ReceiptFromIdResult
+    public class ReceiptWithInstancesView
     {
         /// <summary>
         /// Уникальный id

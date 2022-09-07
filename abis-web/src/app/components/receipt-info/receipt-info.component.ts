@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
-import { ApiClient, ReceiptFromIdResult } from 'src/app/services/ApiService';
-import { InstanceView, ReceiptView } from 'src/app/services/apiService2';
+import { ApiClient, ReceiptWithInstancesView, InstanceView } from 'src/app/services/ApiService';
+import { ReceiptsRepository } from 'src/app/services/receipts.repository';
+import { ReceiptsService } from 'src/app/services/reseipts.service';
 @Component({
   selector: 'app-receipt-info',
   templateUrl: './receipt-info.component.html',
@@ -12,18 +13,25 @@ import { InstanceView, ReceiptView } from 'src/app/services/apiService2';
 export class ReceiptInfoComponent implements OnInit {
 
 
-  receiptForm!: FormGroup; // реактивная форма для поступления
-  instanceForm!: FormGroup; // реактивная форма для книги
-  form:FormGroup[] = [];
+  receiptForm!: FormGroup; // реактивная форма для поступления (тоже не используется)
+  instanceForm!: FormGroup; // реактивная форма для книги (тоже не надо)
+  form:FormGroup[] = []; // уже похоже не нвдо 
 
   // Поступление + список книг, относящихся к этому поступлению
-  receipt = new ReceiptFromIdResult();
-  receipts: ReceiptView[] = [];
+  receipt = new ReceiptWithInstancesView();
   instances: InstanceView[] = [];
-  receiptInfo = new ReceiptView();
 
-  // Режим обращения с карточкой
+  //узнаем с каким объектом мы работаем
+  receiptId$ = this.repo.activeId$;
+  receipt$ = this.repo.activeReceipt$;
+  receipts$ = this.repo.receipts$;
+
+  // Режим обращения с книгами
   workStatus$ = new BehaviorSubject<boolean>(false); // если false - в режиме просмотра, иначе - редактирования
+  mainId: string | undefined; // чтобы отслеживать где мы находимся
+
+  // Режим обращения с поступлением
+  workStatusForReceipt$ = new BehaviorSubject<boolean>(false); 
  
   // id поступления, записанное в маршрут
   id: string | undefined
@@ -31,7 +39,9 @@ export class ReceiptInfoComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
-    private apiClient: ApiClient 
+    private apiClient: ApiClient,
+    private repo: ReceiptsRepository, // хранилище данных
+    private repoService: ReceiptsService // сервис для работы с хранилищем
   ) { }
 
   ngOnInit(): void {
@@ -105,43 +115,45 @@ export class ReceiptInfoComponent implements OnInit {
   }
 
   getReceipt() : void {
+
     this.apiClient.receipt(this.id).subscribe(
       {
         next: (data) => {
           this.receipt = data;
-          this.initReceiptForm();
 
           if(this.receipt.instances != undefined){
             this.instances = this.receipt.instances;
-            this.initInctanceForm();
           }
-
-          this.receiptInfo.id = this.receipt.id;
-          this.receiptInfo.name = this.receipt.name;
-          this.receiptInfo.createdDate = this.receipt.createdDate;
-
-          this.receipts.push(this.receiptInfo);
-
-          // Кладем значения в реактивную форму
-          this.receiptForm.value.Name = this.receipt.name;
-          this.receiptForm.value.CreatedDate = this.receipt.createdDate;
-
         }
       }
     )
   }
 
-  // режим просмотра
+  // режим просмотра (поступает id для проверки на каком элементе находимся)
   viewMode() : void {
+    //this.mainId = "кракозябра"; // зануляем id
     if(this.workStatus$.value == true){
       this.workStatus$.next(false);
     }
   }
 
+  viewModeReceipt() : void {
+    if(this.workStatusForReceipt$.value == true){
+      this.workStatusForReceipt$.next(false);
+    }
+  }
+
   // режим редактировния
-  editMode() : void {
+  editMode(id: string| undefined) : void {
+    this.mainId = id;
     if(this.workStatus$.value == false){
       this.workStatus$.next(true);
+    }
+  }
+
+  editModeReceipt() : void {
+    if(this.workStatusForReceipt$.value == false){
+      this.workStatusForReceipt$.next(true);
     }
   }
 }

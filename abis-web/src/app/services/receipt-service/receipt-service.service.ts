@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { ApiClient, ReceiptView } from '../ApiService';
+import { ApiClient, ReceiptWithInstancesView } from '../ApiService';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +16,7 @@ export class ReceiptServiceService {
   ) { }
 
   // Показать список поступлений
-  showReceipts() : Observable<ReceiptView[]> {
+  showReceipts() : Observable<ReceiptWithInstancesView[]> {
     return this.apiClient.receipts();
   }
 }

@@ -1,6 +1,6 @@
 <p>Таблица постуеплений</p>
 
-
+<!--Будет открываться окно с формой поступления -->
 <button nz-button nzType="primary">Add receipt</button>
 <button nz-button nzType="link" routerLink="/">Back</button>
 
@@ -16,7 +16,7 @@
           </thead>
       
           <tbody>
-            <tr *ngFor="let receipt of receipts">
+            <tr *ngFor="let receipt of receipts$ | async">
         
               <td> <a (click)="goTo(receipt.id)"> {{receipt.name}} </a></td>
               <td>{{receipt.createdDate}}</td>
@@ -25,3 +25,5 @@
       </nz-table>
     </div>
   </div>
+
+  <!-- <p>{{repos.receipts$ | json}}</p> -->

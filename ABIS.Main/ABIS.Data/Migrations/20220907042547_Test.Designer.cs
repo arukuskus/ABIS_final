@@ -3,6 +3,7 @@ using System;
 using ABIS.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ABIS.Data.Migrations
 {
     [DbContext(typeof(ABISContext))]
-    partial class ABISContextModelSnapshot : ModelSnapshot
+    [Migration("20220907042547_Test")]
+    partial class Test
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,6 +34,9 @@ namespace ABIS.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid>("ReceiptId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ReceiptName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -41,7 +46,7 @@ namespace ABIS.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RecieptId");
+                    b.HasIndex("ReceiptId");
 
                     b.ToTable("Instances");
                 });
@@ -68,7 +73,7 @@ namespace ABIS.Data.Migrations
                 {
                     b.HasOne("ABIS.Data.Models.Receipt", "Receipt")
                         .WithMany("Instances")
-                        .HasForeignKey("RecieptId")
+                        .HasForeignKey("ReceiptId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

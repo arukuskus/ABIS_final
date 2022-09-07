@@ -17,8 +17,9 @@ export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
 @Injectable({
     providedIn: 'root'
-  })
+})
 export class ApiClient {
+
     private http: HttpClient;
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -31,7 +32,7 @@ export class ApiClient {
     /**
      * @return Success
      */
-    receipts(): Observable<ReceiptView[]> {
+    receipts(): Observable<ReceiptWithInstancesView[]> {
         let url_ = this.baseUrl + "/api/receipts";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -50,14 +51,14 @@ export class ApiClient {
                 try {
                     return this.processReceipts(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ReceiptView[]>;
+                    return _observableThrow(e) as any as Observable<ReceiptWithInstancesView[]>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ReceiptView[]>;
+                return _observableThrow(response_) as any as Observable<ReceiptWithInstancesView[]>;
         }));
     }
 
-    protected processReceipts(response: HttpResponseBase): Observable<ReceiptView[]> {
+    protected processReceipts(response: HttpResponseBase): Observable<ReceiptWithInstancesView[]> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -71,7 +72,7 @@ export class ApiClient {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(ReceiptView.fromJS(item));
+                    result200!.push(ReceiptWithInstancesView.fromJS(item));
             }
             else {
                 result200 = <any>null;
@@ -90,7 +91,7 @@ export class ApiClient {
      * @param id (optional) 
      * @return Success
      */
-    receipt(id: string | undefined): Observable<ReceiptFromIdResult> {
+    receipt(id: string | undefined): Observable<ReceiptWithInstancesView> {
         let url_ = this.baseUrl + "/api/receipt?";
         if (id === null)
             throw new Error("The parameter 'id' cannot be null.");
@@ -113,14 +114,14 @@ export class ApiClient {
                 try {
                     return this.processReceipt(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ReceiptFromIdResult>;
+                    return _observableThrow(e) as any as Observable<ReceiptWithInstancesView>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ReceiptFromIdResult>;
+                return _observableThrow(response_) as any as Observable<ReceiptWithInstancesView>;
         }));
     }
 
-    protected processReceipt(response: HttpResponseBase): Observable<ReceiptFromIdResult> {
+    protected processReceipt(response: HttpResponseBase): Observable<ReceiptWithInstancesView> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -131,7 +132,7 @@ export class ApiClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ReceiptFromIdResult.fromJS(resultData200);
+            result200 = ReceiptWithInstancesView.fromJS(resultData200);
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -203,7 +204,7 @@ export class ApiClient {
 
 @Injectable({
     providedIn: 'root'
-  })
+})
 export class AddClient {
     private http: HttpClient;
     private baseUrl: string;
@@ -273,9 +274,10 @@ export class AddClient {
 }
 
 export class InstanceView implements IInstanceView {
-    id!: string;
+    id?: string | undefined;
     receiptName?: string | undefined;
     info?: string | undefined;
+    recieptId?: string | undefined;
 
     constructor(data?: IInstanceView) {
         if (data) {
@@ -291,6 +293,7 @@ export class InstanceView implements IInstanceView {
             this.id = _data["id"];
             this.receiptName = _data["receiptName"];
             this.info = _data["info"];
+            this.recieptId = _data["recieptId"];
         }
     }
 
@@ -306,23 +309,25 @@ export class InstanceView implements IInstanceView {
         data["id"] = this.id;
         data["receiptName"] = this.receiptName;
         data["info"] = this.info;
+        data["recieptId"] = this.recieptId;
         return data;
     }
 }
 
 export interface IInstanceView {
-    id?: string;
+    id?: string | undefined;
     receiptName?: string | undefined;
     info?: string | undefined;
+    recieptId?: string | undefined;
 }
 
-export class ReceiptFromIdResult implements IReceiptFromIdResult {
+export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
     id!: string;
     name?: string | undefined;
     createdDate?: Date;
     instances?: InstanceView[] | undefined;
 
-    constructor(data?: IReceiptFromIdResult) {
+    constructor(data?: IReceiptWithInstancesView) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -344,9 +349,9 @@ export class ReceiptFromIdResult implements IReceiptFromIdResult {
         }
     }
 
-    static fromJS(data: any): ReceiptFromIdResult {
+    static fromJS(data: any): ReceiptWithInstancesView {
         data = typeof data === 'object' ? data : {};
-        let result = new ReceiptFromIdResult();
+        let result = new ReceiptWithInstancesView();
         result.init(data);
         return result;
     }
@@ -365,55 +370,11 @@ export class ReceiptFromIdResult implements IReceiptFromIdResult {
     }
 }
 
-export interface IReceiptFromIdResult {
+export interface IReceiptWithInstancesView {
     id?: string;
     name?: string | undefined;
     createdDate?: Date;
     instances?: InstanceView[] | undefined;
-}
-
-export class ReceiptView implements IReceiptView {
-    id!: string;
-    name?: string | undefined;
-    createdDate?: Date;
-
-    constructor(data?: IReceiptView) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.name = _data["name"];
-            this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): ReceiptView {
-        data = typeof data === 'object' ? data : {};
-        let result = new ReceiptView();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["name"] = this.name;
-        data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IReceiptView {
-    id?: string;
-    name?: string | undefined;
-    createdDate?: Date;
 }
 
 export class ApiException extends Error {

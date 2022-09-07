@@ -34,7 +34,7 @@ namespace ABIS.Data.Models
         /// Это Fluent
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Instance>(entity =>
+           /* modelBuilder.Entity<Instance>(entity =>
             {
                 entity.ToTable("instances");
 
@@ -70,7 +70,7 @@ namespace ABIS.Data.Models
             modelBuilder.Entity<Receipt>()
                 .HasOne<Instance>()
                 .WithMany()
-                .HasForeignKey(s => s.InstanceId);
+                .HasForeignKey(s => s.InstanceId);*/
             
 
             OnModelCreatingPartial(modelBuilder);

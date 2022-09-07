@@ -8,7 +8,7 @@
         /// <summary>
         /// Уникальный id
         /// </summary>
-        public Guid Id { get; set; }
+        public Guid? Id { get; set; }
 
         /// <summary>
         /// К какому поступлению относится этот экземпляр
@@ -19,5 +19,10 @@
         /// Краткая информация о книге
         /// </summary>
         public string Info { get; set; }
+
+        /// <summary>
+        /// Id поступления в котором находится эта книга
+        /// </summary>
+        public Guid? RecieptId { get; set; }
     }
 }
