@@ -25,6 +25,6 @@
         /// Список экземпляров книг
         /// </summary>
 
-        public List<InstanceView> Instances = new List<InstanceView>();
+        public List<InstanceView> Instances { get; set; }
     }
 }

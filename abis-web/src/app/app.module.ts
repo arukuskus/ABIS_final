@@ -11,7 +11,6 @@ import { HttpClientModule} from "@angular/common/http";
 import { InitialAuthService } from "./services/auth-service/InitialAuthService"; // подключаем конфигурацию Oauth 2
 import { AuthModule } from './auth/auth.module';
 import { InstanceComponent } from './components/instance/instance.component';
-import { ReceiptComponent } from './components/receipt/receipt.component';
 import { API_BASE_URL } from './services/ApiService';
 import { registerLocaleData } from '@angular/common';
 import en from '@angular/common/locales/en';
@@ -25,7 +24,9 @@ import { NzGridModule } from 'ng-zorro-antd/grid'; // Это сеточка
 import { NzTableModule } from 'ng-zorro-antd/table'; // Это табличка
 import { NzButtonModule } from 'ng-zorro-antd/button'; // Это кнопочка
 import { NzInputModule } from 'ng-zorro-antd/input'; // Это инпуты
-import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzFormModule } from 'ng-zorro-antd/form'; // Это формы
+import { NzTabsModule } from 'ng-zorro-antd/tabs'; // Это табы
+import { NzIconModule } from 'ng-zorro-antd/icon'; // Это значки
 import { InstancesComponent } from './components/instances/instances.component';
 import { ReceiptPageComponent } from './components/receipt-page/receipt-page.component';
 import { ReceiptInfoComponent } from './components/receipt-info/receipt-info.component';
@@ -40,7 +41,6 @@ registerLocaleData(en);
     HomePageComponent,
     UserPageComponent,
     InstanceComponent,
-    ReceiptComponent,
     InstancesComponent,
     ReceiptPageComponent,
     ReceiptListComponent,
@@ -60,7 +60,9 @@ registerLocaleData(en);
     NzGridModule,
     NzTableModule,
     NzButtonModule,
-    NzInputModule
+    NzInputModule,
+    NzTabsModule,
+    NzIconModule
     //AuthModule
   ],
   providers: [

@@ -52,8 +52,9 @@ namespace ABIS.Main.Controllers
         [Route("receipt")]
         public async Task<ReceiptFromIdResult> GetReceiptFromId(Guid id)
         {
-            // Результат
-            var result = new ReceiptFromIdResult();
+
+            // список книг
+            var instances = new List<InstanceView>();
             // поступление
             var receipt = await (from r in _aBISContext.Receipts
                                  where r.Id == id
@@ -64,16 +65,12 @@ namespace ABIS.Main.Controllers
                 throw new Exception("такого поступления не существует");
             }
 
-            result.Id = receipt.Id;
-            result.Name = receipt.Name;
-            result.CreatedDate = receipt.CreatedDate;
-
             // Обрабатываем все книги, которые есть в этом поступлении
             foreach (var i in _aBISContext.Instances)
             {
                 if (i.ReceiptName == receipt.Name)
                 {
-                    result.Instances.Add(new InstanceView
+                    instances.Add(new InstanceView
                     {
                         Id = i.Id,
                         ReceiptName = i.ReceiptName,
@@ -81,6 +78,15 @@ namespace ABIS.Main.Controllers
                     });
                 }
             }
+
+            // Результат
+            var result = new ReceiptFromIdResult
+            {
+                Id = receipt.Id,
+                CreatedDate = receipt.CreatedDate,
+                Name = receipt.Name,
+                Instances = new List<InstanceView>(instances)
+            };
 
             return result;
 

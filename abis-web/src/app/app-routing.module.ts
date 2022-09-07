@@ -6,7 +6,6 @@ import { InstancesComponent } from './components/instances/instances.component';
 import { ReceiptInfoComponent } from './components/receipt-info/receipt-info.component';
 import { ReceiptListComponent } from './components/receipt-list/receipt-list.component';
 import { ReceiptPageComponent } from './components/receipt-page/receipt-page.component';
-import { ReceiptComponent } from './components/receipt/receipt.component';
 
 const routes: Routes = [
  
@@ -15,11 +14,11 @@ const routes: Routes = [
   // страница постулений
   { 
     path: 'receipts', 
-    component: ReceiptPageComponent, //заголовок и router
+    component: ReceiptPageComponent, //заголовок и routeroutlet
     pathMatch: 'prefix',
     children: [
-      {path: '', component: ReceiptListComponent,  pathMatch: 'full'}, //список поступлений ListReceiptsComponent
-      {path: ':id', component: ReceiptInfoComponent, pathMatch: 'full'} //receiptCardComponent- tab1, tab2
+      {path: '', component: ReceiptListComponent,  pathMatch: 'full'}, //список поступлений
+      {path: ':id', component: ReceiptInfoComponent, pathMatch: 'full'} //карточка поступлений
     ]
  },
 

@@ -20,6 +20,8 @@
     "@angular/router": "~13.3.11",
     "@auth0/angular-jwt": "^5.0.2",
     "@ngneat/elf": "^2.1.0",
+    "@ngneat/elf-entities": "^4.4.2",
+    "@ngneat/elf-requests": "^1.1.4",
     "angular-auth-oidc-client": "12.0.3",
     "angular-oauth2-oidc": "^13.0.1",
     "angular-oauth2-oidc-jwks": "^13.0.1",

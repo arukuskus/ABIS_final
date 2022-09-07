@@ -69,14 +69,6 @@ export class InstanceComponent implements OnInit {
     }
   }
 
-  // getInstances() : void {
-  //   this.apiClient2.instances().subscribe(
-  //     data => {
-  //       this.instances = data
-  //     }
-  //   )
-  // }
-
   addInstance() : void {  
      if(this.useForm != null) {
 
