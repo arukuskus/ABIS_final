@@ -274,7 +274,7 @@ export class AddClient {
 }
 
 export class InstanceView implements IInstanceView {
-    id?: string | undefined;
+    id!: string;
     receiptName?: string | undefined;
     info?: string | undefined;
     recieptId?: string | undefined;
@@ -324,8 +324,8 @@ export interface IInstanceView {
 export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
     id!: string;
     name?: string | undefined;
-    createdDate?: Date;
-    instances?: InstanceView[] | undefined;
+    createdDate!: Date;
+    instances!: InstanceView[];
 
     constructor(data?: IReceiptWithInstancesView) {
         if (data) {

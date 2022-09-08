@@ -31,6 +31,7 @@ import { InstancesComponent } from './components/instances/instances.component';
 import { ReceiptPageComponent } from './components/receipt-page/receipt-page.component';
 import { ReceiptInfoComponent } from './components/receipt-info/receipt-info.component';
 import { ReceiptListComponent } from './components/receipt-list/receipt-list.component';
+import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
 
 registerLocaleData(en);
 
@@ -62,7 +63,8 @@ registerLocaleData(en);
     NzButtonModule,
     NzInputModule,
     NzTabsModule,
-    NzIconModule
+    NzIconModule,
+    NzPageHeaderModule
     //AuthModule
   ],
   providers: [

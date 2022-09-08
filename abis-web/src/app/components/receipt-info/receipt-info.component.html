@@ -1,129 +1,122 @@
-<p>Карточка поступлений</p>
+
+<nz-page-header class="site-page-header" nzTitle="Поступление" nzSubtitle="{{receipt.name}}">
+ 
+</nz-page-header>
+
 
 <!--Карточка поступлений, которая состоит из двух табов -->
   <div>
-    <button nz-button nzType="primary">Save</button>
-    <button nz-button nzType="primary">Cancel changes</button>
+    <button nz-button nzType="link" routerLink="/receipts">Назад</button>
 
-    <button nz-button nzType="primary" >Add receipt</button>
-    <button nz-button nzType="link" routerLink="/receipts">Back</button>
+    <button
+      *ngIf="!(workStatusForReceipt$  | async)"
+      nz-button
+      nzType="primary"
+      (click)="editModeReceipt()"
+      [disabled]="!!(workStatusForReceipt$  | async)"
+      >
+        Редактировать
+    </button>
+
+    <button 
+      *ngIf="!(workStatusForReceipt$  | async)"
+      nz-button 
+      nzType="primary" 
+      nzDanger>
+      Удалить
+    </button>
+
+    <button
+      *ngIf="(workStatusForReceipt$  | async)"
+      nz-button 
+      nzType="primary"
+      [disabled]="!(isFormValid$ | async)"
+      (click)="viewModeReceipt()">
+      Сохранить изменения
+    </button>
+    <button 
+      *ngIf="(workStatusForReceipt$  | async)"
+      nz-button 
+      nzType="primary" 
+      nzDanger
+      (click)="viewModeReceipt()">
+      Отменить изменения
+    </button>
+    
   
     <div>
-      
       <nz-tabset>
-        <nz-tab nzTitle="Receipt" [nzDisabled]="(workStatus$ | async)">
-         <!--Информация о поступлении в режиме просмотра-->
-         <table>
-          <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th>Date Created</th>
-            <th>Режим работы</th>
-          </tr>
+        <nz-tab nzTitle="Сведения">
 
-          <tr>
-            <td>{{id}}</td>
+         <!--Информация о поступлении-->
 
-            <td *ngIf="!(workStatusForReceipt$  | async)">{{receipt.name}}</td>
-            <td *ngIf="!(workStatusForReceipt$  | async)">{{receipt.createdDate}}</td>
+          <!--Просмотр-->
+          <p *ngIf="!(workStatusForReceipt$  | async)"> Название: {{receipt.name}}</p>
+          <p *ngIf="!(workStatusForReceipt$  | async)"> Дата создания: {{receipt.createdDate | date:'medium'}}</p>
 
-            <td *ngIf="(workStatusForReceipt$  | async)">
-              <input  
-              nz-input
-              [(ngModel)]="receipt.name"
-              nzSize="default" 
-              placeholder="enter name"
-              type="text" 
-              id="name" 
-              />
-            </td>
+          <!--Редактиирование-->
+         <form *ngIf="(workStatusForReceipt$  | async)" [formGroup]="receiptForm" nz-form (ngSubmit)="submitReceiptForm()">
+          <!--Наименование-->
+          <nz-form-item>
+              <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="Name">Название</nz-form-label>
+              <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="The input is not valid Name!">
 
-            <td *ngIf="(workStatusForReceipt$  | async)">
-              <input  
-              nz-input
-              [(ngModel)]="receipt.createdDate"
-              nzSize="default" 
-              placeholder="enter date created"
-              type="text" 
-              id="createdDate" 
-              />
-            </td>
+                <!--Редактирование-->
+                <input
+                  nz-input 
+                  type="text" 
+                  id="Name" 
+                  placeholder="enter name"
+                  formControlName="Name" 
+                  />
 
-            <td>
-              <button
-                    nz-button
-                    nzType="link"
-                    (click)="viewModeReceipt()"
-                    [disabled]="!(workStatusForReceipt$ | async)"
-                    >
-                    <span nz-icon nzType="info" nzTheme="outline"></span>
-                </button>
+              </nz-form-control>
+          </nz-form-item>
 
-                <button
-                  nz-button
-                  nzType="link"
-                  (click)="editModeReceipt()"
-                  [disabled]="!!(workStatusForReceipt$  | async)"
-                >
-                <span nz-icon nzType="edit" nzTheme="outline"></span>
-              </button>
-            </td>
-          </tr>
+          <!--Дата создания-->
+          <nz-form-item>
+              <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="CreatedDate">Дата создания</nz-form-label>
+              <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Please input created date!">
 
-        </table>
-        <!-- <p>{{receiptId$ | json}}</p> -->
-        <!--Форма редактирования поступления-->
-        <!-- <div *ngIf="workStatus$.value == true">
-          <form nz-form class="receipt-form" [formGroup]="receiptForm" (ngSubmit)="submitReceiptForm()">
-            <nz-form-item>
-                <nz-form-label [nzSm]="5" [nzXs]="10" nzRequired nzFor="Name">Name:</nz-form-label>
-                <nz-form-control [nzSm]="15" [nzXs]="20" nzErrorTip="The input is not valid Name!">
-                    <input  
-                        nz-input 
-                        nzSize="default" 
-                        placeholder="enter Name"
-                        type="text" 
-                        class="form-control" 
-                        id="Name" 
-                        formControlName="Name" 
-                        />
-                </nz-form-control>
-            </nz-form-item>
-        
-            <nz-form-item>
-                <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="CreatedDate" nzRequired>Date created:</nz-form-label>
-                <nz-form-control [nzSm]="17" [nzXs]="14" nzErrorTip="Please input created date!">
-                    <input 
-                        nz-input 
-                        nzSize="default" 
-                        placeholder="enter created date"
-                        id="CreatedDate" 
-                        formControlName="CreatedDate" 
-                    />
-                </nz-form-control>
-            </nz-form-item>
+                <!--Редактирование-->
+                <input 
+                  placeholder="enter created date"
+                  nz-input
+                  type="datetime-local"
+                  nzSize="default" 
+                  id="CreatedDate" 
+                  formControlName="CreatedDate" 
+                />
+
+              </nz-form-control>
+          </nz-form-item>
         </form>
-        </div> -->
 
-        <!-- <button nz-button nzType="link" (click)="viewModeReceipt()" [disabled]="!(workStatusForReceipt$ | async)">Режим просмотра</button>
-        <button nz-button nzType="link" (click)="editModeReceipt()" [disabled]="!!(workStatusForReceipt$ | async)">Режим редактирования</button> -->
+        <div>{{receiptForm.value | json}}</div>
 
         </nz-tab>
 
-        <nz-tab nzTitle="Instances of receipt" [nzDisabled]="(workStatusForReceipt$ | async)">
+        <nz-tab nzTitle="Издания">
+          <!--Добавить издание-->
+          <button
+            nz-button 
+            nzType="primary">
+            Добавить издание
+          </button>
+
            <!--Информация о книгах в режиме просмотра-->
-           <nz-table [nzData]="instances">
+           <!--Не могу туда подставить переменную хранилища ругается и говорит что readonly ему нужно-->
+           <nz-table [nzData]="(instances$ | async)?? []">
             <thead>
               <tr>
-                <th>index</th>
-                <th>Info about book</th>
+                <th>Номер</th>
+                <th>Информация об издании</th>
                 <th>Режим работы</th>
               </tr>
             </thead>
   
             <tbody>
-              <tr *ngFor="let instance of instances; index as i">
-
+              <tr *ngFor="let instance of instances$ | async; index as i">
                
                 <td>{{i}}</td>
 
@@ -143,22 +136,24 @@
                 
                 <td>
 
-                  <button
-                    nz-button
-                    nzType="link"
-                    (click)="viewMode()"
-                    [disabled]="!(workStatus$ | async)"
-                    >
-                    <span nz-icon nzType="info" nzTheme="outline"></span>
-                  </button>
-                  
+                  <!--Режим редактирования-->
                   <button
                     nz-button
                     nzType="link"
                     (click)="editMode(instance.id)"
-                    [disabled]="!!(workStatus$ | async) && instance.id == mainId"
+                    [disabled]="(workStatus$ | async) && instance.id == mainId"
                     >
                     <span nz-icon nzType="edit" nzTheme="outline"></span>
+                  </button>
+
+                  <!--Сохранить изменения-->
+                  <button *ngIf="(workStatus$ | async) && instance.id == mainId" nz-button nzType="link" (click)="viewMode()">
+                    <span nz-icon nzType="check" nzTheme="outline"></span>
+                  </button>
+
+                  <!--Отменить изменения-->
+                  <button *ngIf="(workStatus$ | async) && instance.id == mainId" nz-button nzType="link" (click)="viewMode()">
+                    <span nz-icon nzType="close" nzTheme="outline"></span>
                   </button>
 
                 </td>
@@ -170,3 +165,7 @@
       </nz-tabset>
     </div>
   </div>
+
+  <div>{{receiptId$ | async | json}}</div>
+  <div>{{receiptName$ | async | json}}</div>
+  <div>{{receiptCreatedDate$ | async | json}}</div>

@@ -1,10 +1,14 @@
+import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { BehaviorSubject } from 'rxjs';
 import { ApiClient, ReceiptWithInstancesView, InstanceView } from 'src/app/services/ApiService';
-import { ReceiptsRepository } from 'src/app/services/receipts.repository';
-import { ReceiptsService } from 'src/app/services/reseipts.service';
+import { InstancesStore } from 'src/app/services/instances.store';
+import { InstancesStoreService } from 'src/app/services/instances.store.service';
+
+@UntilDestroy()
 @Component({
   selector: 'app-receipt-info',
   templateUrl: './receipt-info.component.html',
@@ -12,23 +16,26 @@ import { ReceiptsService } from 'src/app/services/reseipts.service';
 })
 export class ReceiptInfoComponent implements OnInit {
 
+  // Реактивная форма для поступления
+  receiptForm!: FormGroup;
+  isFormValid$ = new BehaviorSubject<boolean>(false);
 
-  receiptForm!: FormGroup; // реактивная форма для поступления (тоже не используется)
-  instanceForm!: FormGroup; // реактивная форма для книги (тоже не надо)
-  form:FormGroup[] = []; // уже похоже не нвдо 
-
-  // Поступление + список книг, относящихся к этому поступлению
+  // Поступлениеи и экземпляры
   receipt = new ReceiptWithInstancesView();
   instances: InstanceView[] = [];
 
-  //узнаем с каким объектом мы работаем
-  receiptId$ = this.repo.activeId$;
-  receipt$ = this.repo.activeReceipt$;
-  receipts$ = this.repo.receipts$;
+  // Хранилище изданий
+  instances$ = this.store.instances$;
+  receiptId$ = this.store.receiptId$;
+  receiptName$ = this.store.receiptName$;
+  receiptCreatedDate$ = this.store.receiptDateCreated$;
 
-  // Режим обращения с книгами
+  date = new Date();
+  name = '';
+
+  // Режим обращения с изданиями
   workStatus$ = new BehaviorSubject<boolean>(false); // если false - в режиме просмотра, иначе - редактирования
-  mainId: string | undefined; // чтобы отслеживать где мы находимся
+  mainId: string | undefined; // выбранное издание (в итоге должна эта штука из хранилища приходить)
 
   // Режим обращения с поступлением
   workStatusForReceipt$ = new BehaviorSubject<boolean>(false); 
@@ -40,19 +47,31 @@ export class ReceiptInfoComponent implements OnInit {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private apiClient: ApiClient,
-    private repo: ReceiptsRepository, // хранилище данных
-    private repoService: ReceiptsService // сервис для работы с хранилищем
+    private store: InstancesStore, // хранилище данных
+    private storeService: InstancesStoreService // сервис для работы с хранилищем
   ) { }
 
   ngOnInit(): void {
 
     // следим в каком поступлении мы находимся
-    this.route.params.subscribe(
+    this.route.params.pipe(untilDestroyed(this)).subscribe(
       params =>  this.id = params['id']
     );
 
-     this.getReceipt(); // опять же нехорошо так делать при инициализации компонента
-    
+      this.initReceiptForm();
+      this.getReceipt(); // опять же нехорошо так делать при инициализации компонента
+
+      // полезная штука, которая следит за изменениями в форме
+      this.receiptForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
+        switch(status) {
+          case 'VALID':
+            this.isFormValid$.next(true);
+          break;
+          case 'INVALID':
+            this.isFormValid$.next(false);
+          break;
+        }
+      });
   }
 
    // Реактивная форма поступления
@@ -63,28 +82,6 @@ export class ReceiptInfoComponent implements OnInit {
         CreatedDate: [ this.receipt.createdDate,  [Validators.required]]
       }
     );
-  }
-
-  // Реактивная форма книги
-  private initInctanceForm(): void {
-    // this.instanceForm = this.fb.group(
-    //   {
-    //     //Info: [ null, [Validators.required] ]
-    //   });
-
-    this.createInstancesForms(this.form);
-  }
-
-  createInstancesForms(form: FormGroup[]){
-    this.instances.forEach(instance => {
-      form.push(
-        this.fb.group({ 
-          Info: [ instance.info, [Validators.required] ]
-        })
-      )
-    });
-
-    //let t = this.form.controls[0].value.Info
   }
 
   // Вроде следим за изменением формы
@@ -101,29 +98,47 @@ export class ReceiptInfoComponent implements OnInit {
     }
   }
 
-  submitInstanceForm(): void {
-    if (this.instanceForm.valid) {
-      console.log('submit', this.instanceForm.value);
-    } else {
-      Object.values(this.instanceForm.controls).forEach(control => {
-        if (control.invalid) {
-          control.markAsDirty();
-          control.updateValueAndValidity({ onlySelf: true });
-        }
-      });
-    }
-  }
-
   getReceipt() : void {
+
+    // получили список изданий
+    this.storeService.getInstances(this.id).pipe(untilDestroyed(this)).subscribe();
+    // this.receiptCreatedDate$.subscribe(
+    //   d => {
+    //     this.date = d
+    //   }
+    // )
+    // this.receiptName$.subscribe(
+    //   d => {
+    //     this.name = d;
+    //   }
+    // )
+    // var diff = (this.receipt.createdDate.getTimezoneOffset()/60)*(-1);
+    // this.date.setTime(this.date.getTime() + (diff * 60) * 60 * 1000)
+    // // инициализируем форму
+    // this.receiptForm.setValue({
+    //   Name: this.name,
+    //   CreatedDate: this.date.toISOString().slice(0,16)
+    // })
+    
 
     this.apiClient.receipt(this.id).subscribe(
       {
         next: (data) => {
           this.receipt = data;
 
-          if(this.receipt.instances != undefined){
-            this.instances = this.receipt.instances;
-          }
+          //var t =  this.receipt.createdDate.toISOString().slice(0,-5); // чудесное рабочее чудо!
+          var diff = (this.receipt.createdDate.getTimezoneOffset()/60)*(-1);
+          this.receipt.createdDate.setTime(this.receipt.createdDate.getTime() + (diff * 60) * 60 * 1000)
+          var k = this.receipt.createdDate.toISOString();
+          // инициализируем форму
+          this.receiptForm.setValue({
+            Name: this.receipt.name,
+            CreatedDate: this.receipt.createdDate.toISOString().slice(0,16)
+          })
+
+           if(this.receipt.instances != undefined){
+             this.instances = this.receipt.instances;
+           }
         }
       }
     )
