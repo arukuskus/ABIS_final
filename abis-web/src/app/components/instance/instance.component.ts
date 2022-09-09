@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { InstanceServiceService } from 'src/app/services/instance-service/instance-service.service';
-import { AddClient, ApiClient, InstanceView } from 'src/app/services/ApiService';
+import { ApiClient, InstanceView } from 'src/app/services/ApiService';
 import { BehaviorSubject } from 'rxjs';
 
 @Component({
@@ -23,8 +23,7 @@ export class InstanceComponent implements OnInit {
   constructor(
     private instanceService: InstanceServiceService,
     private fb: FormBuilder,
-    private apiClient: AddClient,
-    private apiClient2: ApiClient
+    private apiClient: ApiClient
   ) { }
 
   ngOnInit(): void {

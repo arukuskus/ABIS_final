@@ -1,10 +1,10 @@
 import { formatDate } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { BehaviorSubject } from 'rxjs';
-import { ApiClient, ReceiptWithInstancesView, InstanceView } from 'src/app/services/ApiService';
+import { ApiClient, ReceiptWithInstancesView, InstanceView, ReceiptView } from 'src/app/services/ApiService';
 import { InstancesStore } from 'src/app/services/instances.store';
 import { InstancesStoreService } from 'src/app/services/instances.store.service';
 
@@ -12,7 +12,8 @@ import { InstancesStoreService } from 'src/app/services/instances.store.service'
 @Component({
   selector: 'app-receipt-info',
   templateUrl: './receipt-info.component.html',
-  styleUrls: ['./receipt-info.component.css']
+  styleUrls: ['./receipt-info.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReceiptInfoComponent implements OnInit {
 
@@ -20,8 +21,12 @@ export class ReceiptInfoComponent implements OnInit {
   receiptForm!: FormGroup;
   isFormValid$ = new BehaviorSubject<boolean>(false);
 
+  // Реактиваня форма для издания
+  instanceForm!: FormGroup;
+  isInstanceFormValid$ = new BehaviorSubject<boolean>(false);
+
   // Поступлениеи и экземпляры
-  receipt = new ReceiptWithInstancesView();
+  receipt = new ReceiptView();
   instances: InstanceView[] = [];
 
   // Хранилище изданий
@@ -29,9 +34,12 @@ export class ReceiptInfoComponent implements OnInit {
   receiptId$ = this.store.receiptId$;
   receiptName$ = this.store.receiptName$;
   receiptCreatedDate$ = this.store.receiptDateCreated$;
+  activeInstance$ = this.store.activeInstance$;
+  activeId$ = this.store.activeId$;
 
-  date = new Date();
-  name = '';
+  //Привязка импутов для издания
+  instanceActive = new InstanceView();
+
 
   // Режим обращения с изданиями
   workStatus$ = new BehaviorSubject<boolean>(false); // если false - в режиме просмотра, иначе - редактирования
@@ -53,15 +61,19 @@ export class ReceiptInfoComponent implements OnInit {
 
   ngOnInit(): void {
 
+    this.instanceActive.id = '';
+    this.instanceActive.info = '';
+
     // следим в каком поступлении мы находимся
     this.route.params.pipe(untilDestroyed(this)).subscribe(
       params =>  this.id = params['id']
     );
 
       this.initReceiptForm();
-      this.getReceipt(); // опять же нехорошо так делать при инициализации компонента
+      this.initInstanceForm();
+      this.getInstances();
 
-      // полезная штука, которая следит за изменениями в форме
+      // Следим за изменениями в форме поступлений
       this.receiptForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
         switch(status) {
           case 'VALID':
@@ -72,6 +84,19 @@ export class ReceiptInfoComponent implements OnInit {
           break;
         }
       });
+
+      // Следим за изменениями в форме изданий
+      this.instanceForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
+        switch(status) {
+          case 'VALID':
+            this.isInstanceFormValid$.next(true);
+            break;
+          case 'INVALID':
+            this.isInstanceFormValid$.next(false);
+            break;
+        }
+      });
+
   }
 
    // Реактивная форма поступления
@@ -82,6 +107,15 @@ export class ReceiptInfoComponent implements OnInit {
         CreatedDate: [ this.receipt.createdDate,  [Validators.required]]
       }
     );
+  }
+
+  // Реактивная форма издания
+  private initInstanceForm(): void {
+    this.instanceForm = this.fb.group(
+      {
+        Info: [null, [Validators.required]]
+      }
+    )
   }
 
   // Вроде следим за изменением формы
@@ -98,77 +132,117 @@ export class ReceiptInfoComponent implements OnInit {
     }
   }
 
-  getReceipt() : void {
-
+  getInstances() : void {
     // получили список изданий
-    this.storeService.getInstances(this.id).pipe(untilDestroyed(this)).subscribe();
-    // this.receiptCreatedDate$.subscribe(
-    //   d => {
-    //     this.date = d
-    //   }
-    // )
-    // this.receiptName$.subscribe(
-    //   d => {
-    //     this.name = d;
-    //   }
-    // )
-    // var diff = (this.receipt.createdDate.getTimezoneOffset()/60)*(-1);
-    // this.date.setTime(this.date.getTime() + (diff * 60) * 60 * 1000)
-    // // инициализируем форму
-    // this.receiptForm.setValue({
-    //   Name: this.name,
-    //   CreatedDate: this.date.toISOString().slice(0,16)
-    // })
-    
+    this.storeService.getInstances(this.id).pipe(untilDestroyed(this)).subscribe({
+      next:
+        result => {
 
-    this.apiClient.receipt(this.id).subscribe(
-      {
-        next: (data) => {
-          this.receipt = data;
+          // Сохраняем информацию о поступлении в промежуточную переменную
+          this.receipt.id = result.id;
+          this.receipt.name = result.name;
+          this. receipt.createdDate = result.createdDate;
 
-          //var t =  this.receipt.createdDate.toISOString().slice(0,-5); // чудесное рабочее чудо!
-          var diff = (this.receipt.createdDate.getTimezoneOffset()/60)*(-1);
-          this.receipt.createdDate.setTime(this.receipt.createdDate.getTime() + (diff * 60) * 60 * 1000)
-          var k = this.receipt.createdDate.toISOString();
-          // инициализируем форму
           this.receiptForm.setValue({
-            Name: this.receipt.name,
-            CreatedDate: this.receipt.createdDate.toISOString().slice(0,16)
-          })
-
-           if(this.receipt.instances != undefined){
-             this.instances = this.receipt.instances;
-           }
+            Name: result.name,
+            CreatedDate: this.convertDateTime(result.createdDate)
+          });
         }
+      }
+    );
+  }
+
+  // Сохранить изменения для поступлений
+  saveChangeReceipt(){
+    if(this.workStatusForReceipt$.value == true){
+      this.workStatusForReceipt$.next(false);
+    }
+    
+    // сохраним результат из формы в промежуточную переменную
+    this.receipt.name = this.receiptForm.value.Name;
+    this.receipt.createdDate = new Date(this.receiptForm.value.CreatedDate);
+
+    // отправляемся на сервер эльф с данными поступления
+    this.storeService.saveNewReceipt(this.receipt).subscribe();
+  }
+
+  // Отменить изменения
+  stopChengesReceipt(){
+    if(this.workStatusForReceipt$.value == true){
+      this.workStatusForReceipt$.next(false);
+    }
+
+    // выдаем значение из свойств хранилища на форму
+     this.receiptForm.setValue({
+       Name: this.receipt.name,
+       CreatedDate: this.convertDateTime(this.receipt.createdDate)
+     })
+    
+  }
+
+  // Сохранить изменения для изданий
+  saveChengesInstance(id: string) {
+    if(this.workStatus$.value == true){
+      this.workStatus$.next(false);
+    }
+
+    // сохраним результат из формы в промежуточную переменную
+    this.instanceActive.info = this.instanceForm.value.Info;
+
+    this.storeService.saveNewInstance(this.instanceActive).subscribe();
+  }
+
+  // Отмане изменений для изданий
+  stopChengesInstance(id: string) {
+
+    if(this.workStatus$.value == true){
+      this.workStatus$.next(false);
+    }
+
+    // перезаписали промежуточную переменную
+    this.store.setActiveId(id);
+    this.activeInstance$.subscribe(
+      result => { 
+        this.instanceActive.id = result?.id ?? '';
+        this.instanceActive.info = result?.info;
+
+        // Заполняем реактивную форму
+        this.instanceForm.setValue({Info: result?.info});
       }
     )
   }
 
-  // режим просмотра (поступает id для проверки на каком элементе находимся)
-  viewMode() : void {
-    //this.mainId = "кракозябра"; // зануляем id
-    if(this.workStatus$.value == true){
-      this.workStatus$.next(false);
-    }
-  }
+  // режим редактировния Издания
+  editMode(id: string) : void {
+    this.store.setActiveId(id); // определяем активный элемент
 
-  viewModeReceipt() : void {
-    if(this.workStatusForReceipt$.value == true){
-      this.workStatusForReceipt$.next(false);
-    }
-  }
+    // Вытаскиваем и распределяем данные из выбранного издания
+    this.activeInstance$.subscribe(
+      result => { 
+        this.instanceActive.id = result?.id ?? '';
+        this.instanceActive.info = result?.info;
 
-  // режим редактировния
-  editMode(id: string| undefined) : void {
-    this.mainId = id;
+        // Заполняем реактивную форму
+        this.instanceForm.setValue({Info: result?.info});
+      }
+    )
+
     if(this.workStatus$.value == false){
       this.workStatus$.next(true);
     }
   }
 
+  // Режим редактирования поступления
   editModeReceipt() : void {
     if(this.workStatusForReceipt$.value == false){
       this.workStatusForReceipt$.next(true);
     }
+  }
+
+  // Перевод даты и времени в нужный формат
+  private convertDateTime(date: Date) : string {
+    let timeZone = (date.getTimezoneOffset()/60)*(-1);
+    date.setTime(date.getTime() + (timeZone * 60)  * 60 * 1000);
+    return date.toISOString().slice(0,16);
   }
 }

@@ -5,12 +5,10 @@ import {
     selectAllEntities, 
     withActiveId,
      withEntities, 
-     selectEntities,
-     selectActiveEntities,
      selectActiveEntity,
-     getActiveEntity,
-     getActiveId,
-     selectActiveId
+     selectActiveId,
+     setActiveId,
+     updateEntities
     } from "@ngneat/elf-entities";
 import { selectRequestStatus } from "@ngneat/elf-requests";
 
@@ -45,9 +43,20 @@ export class InstancesStore {
   receiptDateCreated$ = store.pipe(select((state) => state.createdDate));
 
   instances$ = store.pipe(selectAllEntities()); // возвращает observable
-  activeInstance$ = store.pipe(selectActiveEntity()); // активное поступление
+  activeInstance$ = store.pipe(selectActiveEntity()); // активное издание
   activeId$ = store.pipe(selectActiveId()); // активное id
 
+  
+
+  // да как же обновить эту сущность
+  setInstance(instance: InstanceView, id: string){
+    store.update(updateEntities(id, instance));
+  }
+
+  // обновление id
+  setActiveId(id: string) {
+    store.update(setActiveId(id));
+  }
 
   // обновление репозитория
   setInstances(instances: InstanceView[]){

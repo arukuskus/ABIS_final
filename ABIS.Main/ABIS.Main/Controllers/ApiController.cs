@@ -72,41 +72,12 @@ namespace ABIS.Main.Controllers
                 }).ToList()
             }).Where(x => x.Id == id).SingleOrDefaultAsync(cancellationToken);
 
-            // поступление
-            //var receipt = await (from r in _aBISContext.Receipts
-            //                     where r.Id == id
-            //                     select r).SingleOrDefaultAsync(cancellationToken);
-
             if (result == null)
             {
                 throw new Exception("такого поступления не существует");
             }
 
-            // Обрабатываем все книги, которые есть в этом поступлении
-            //foreach (var i in _aBISContext.Instances)
-            //{
-            //    if (i.ReceiptName == receipt.Name)
-            //    {
-            //        instances.Add(new InstanceView
-            //        {
-            //            Id = i.Id,
-            //            ReceiptName = i.ReceiptName,
-            //            Info = i.Info,
-            //        });
-            //    }
-            //}
-
-            //// Результат
-            //var result = new ReceiptWithInstancesView
-            //{
-            //    Id = receipt.Id,
-            //    CreatedDate = receipt.CreatedDate,
-            //    Name = receipt.Name,
-            //    Instances = new List<InstanceView>(instances)
-            //};
-
             return result;
-
         }
 
         /// <summary>
@@ -126,16 +97,6 @@ namespace ABIS.Main.Controllers
                 RecieptId = x.RecieptId
             }).ToListAsync(cancellationToken);
 
-            //foreach(var instance in _aBISContext.Instances)
-            //{
-            //    instances.Add(new InstanceView
-            //    {
-            //        Id = instance.Id,
-            //        ReceiptName = instance.ReceiptName,
-            //        Info = instance.Info
-            //    });
-            //}
-
             return result;
         }
 
@@ -143,7 +104,7 @@ namespace ABIS.Main.Controllers
         /// Добавление новой книги
         /// </summary>
         [HttpPost]
-        [Route("add_instance")]
+        [Route("add/instance")]
         public async Task<bool> AddNewInstance([FromBody] InstanceView instance, CancellationToken cancellationToken)
         {
 
@@ -191,6 +152,84 @@ namespace ABIS.Main.Controllers
                 await context.CommitAsync(); // Еще выведем комментарии
 
                 return true;
+            }
+        }
+
+        /// <summary>
+        /// Изменяетданные в выбранном издании и возвращает копию этого объекта
+        /// </summary>
+        [HttpPost]
+        [Route("save/instance")]
+        public async Task<InstanceView> SaveInstance([FromBody] InstanceView newInstance, CancellationToken cancellationToken)
+        {
+            // это вместо валидации параметров
+            if(newInstance == null) {
+                throw new Exception("хотите передать в sql что - то нехорошее");
+            }
+
+            using(var dbContextTransaction = _aBISContext.Database.BeginTransaction())
+            {
+                var instance = await (from i in _aBISContext.Instances
+                                      where i.Id == newInstance.Id
+                                      select i).SingleOrDefaultAsync(cancellationToken);
+                if (instance == null)
+                {
+                    throw new Exception("раз такого издания нет, то и обновлять нечего");
+                }
+
+                instance.Info = newInstance.Info;
+
+                var result = new InstanceView()
+                {
+                    Id = instance.Id,
+                    Info = instance.Info,
+                    ReceiptName = instance.ReceiptName,
+                    RecieptId = instance.RecieptId
+                };
+                await _aBISContext.SaveChangesAsync(cancellationToken);
+                await dbContextTransaction.CommitAsync(cancellationToken);
+
+                return result;
+            }
+        }
+
+
+        /// <summary>
+        /// Изменяет данные в выбранном поступлении и возвращает копию этого объекта
+        /// </summary>
+        [HttpPost]
+        [Route("save/receipt")]
+        public async Task<ReceiptView> SaveReceipt([FromBody] ReceiptView newReceipt, CancellationToken cancellationToken)
+        {
+            // это вместо валидации параметров
+            if (newReceipt == null)
+            {
+                throw new Exception("хотите передать в sql что - то нехорошее");
+            }
+
+            using (var dbContextTransaction = _aBISContext.Database.BeginTransaction())
+            {
+                var receipt = await (from i in _aBISContext.Receipts
+                                      where i.Id == newReceipt.Id
+                                      select i).SingleOrDefaultAsync(cancellationToken);
+                if (receipt == null)
+                {
+                    throw new Exception("раз такого издания нет, то и обновлять нечего");
+                }
+
+                receipt.Name = newReceipt.Name;
+                receipt.CreatedDate = newReceipt.CreatedDate;
+
+                var result = new ReceiptView
+                {
+                    Id = newReceipt.Id,
+                    Name = newReceipt.Name,
+                    CreatedDate = newReceipt.CreatedDate
+                };
+                await _aBISContext.SaveChangesAsync(cancellationToken);
+                await dbContextTransaction.CommitAsync(cancellationToken);
+
+                return result;
             }
         }
     }
