@@ -15,7 +15,31 @@ export class InstancesStoreService {
     private readonly _apiService: ApiClient
   ) {}
 
+  //удалить издание
+  deleteInctance(id:string){
+    return this._apiService.instance3(id).pipe(
+      tap((data)=>{
+        // true - удалось удалить, false - не удалось
+        if(data){
+          this.store.deleteInstance(id);
+        }
+      })
+    )
+  }
 
+  // Добавить новое издание
+  addNewInstance(newInstance: InstanceView){
+    return this._apiService.instance(newInstance).pipe(
+      tap((data) => {
+        // true - удалось добавить, false - не удалось
+        if(data){
+          this.store.addInstance(data);
+          //назначим активный id
+          //this.store.setActiveId(id); // определяем активный элемент
+        }
+      })
+    )
+  }
 
   // Сохраним инфо об измененном поступлении
   saveNewReceipt(newReceipt: ReceiptView){

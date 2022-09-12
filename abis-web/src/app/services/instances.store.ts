@@ -8,7 +8,11 @@ import {
      selectActiveEntity,
      selectActiveId,
      setActiveId,
-     updateEntities
+     updateEntities,
+     selectEntity,
+     addEntities,
+     deleteEntities,
+     resetActiveId
     } from "@ngneat/elf-entities";
 import { selectRequestStatus } from "@ngneat/elf-requests";
 
@@ -46,9 +50,22 @@ export class InstancesStore {
   activeInstance$ = store.pipe(selectActiveEntity()); // активное издание
   activeId$ = store.pipe(selectActiveId()); // активное id
 
-  
+  // сбросить активный id
+  resetActiveId(){
+    store.update(resetActiveId());
+  }
 
-  // да как же обновить эту сущность
+  // удалить издание
+  deleteInstance(id: string){
+    store.update(deleteEntities(id));
+  }
+
+  // добавление нового издания
+  addInstance(instance: InstanceView){
+    store.update(addEntities(instance));
+  }
+
+  // обновление издания по id
   setInstance(instance: InstanceView, id: string){
     store.update(updateEntities(id, instance));
   }

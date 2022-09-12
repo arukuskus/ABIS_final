@@ -31,7 +31,7 @@ export class ApiClient {
     /**
      * @return Success
      */
-    receipts(): Observable<ReceiptWithInstancesView[]> {
+    receipts(): Observable<ReceiptView[]> {
         let url_ = this.baseUrl + "/api/receipts";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -50,14 +50,14 @@ export class ApiClient {
                 try {
                     return this.processReceipts(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ReceiptWithInstancesView[]>;
+                    return _observableThrow(e) as any as Observable<ReceiptView[]>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ReceiptWithInstancesView[]>;
+                return _observableThrow(response_) as any as Observable<ReceiptView[]>;
         }));
     }
 
-    protected processReceipts(response: HttpResponseBase): Observable<ReceiptWithInstancesView[]> {
+    protected processReceipts(response: HttpResponseBase): Observable<ReceiptView[]> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -71,7 +71,7 @@ export class ApiClient {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(ReceiptWithInstancesView.fromJS(item));
+                    result200!.push(ReceiptView.fromJS(item));
             }
             else {
                 result200 = <any>null;
@@ -90,7 +90,7 @@ export class ApiClient {
      * @param id (optional) 
      * @return Success
      */
-    receipt(id: string | undefined): Observable<ReceiptWithInstancesView> {
+    receiptGET(id: string | undefined): Observable<ReceiptWithInstancesView> {
         let url_ = this.baseUrl + "/api/receipt?";
         if (id === null)
             throw new Error("The parameter 'id' cannot be null.");
@@ -107,11 +107,11 @@ export class ApiClient {
         };
 
         return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processReceipt(response_);
+            return this.processReceiptGET(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
                 try {
-                    return this.processReceipt(response_ as any);
+                    return this.processReceiptGET(response_ as any);
                 } catch (e) {
                     return _observableThrow(e) as any as Observable<ReceiptWithInstancesView>;
                 }
@@ -120,7 +120,7 @@ export class ApiClient {
         }));
     }
 
-    protected processReceipt(response: HttpResponseBase): Observable<ReceiptWithInstancesView> {
+    protected processReceiptGET(response: HttpResponseBase): Observable<ReceiptWithInstancesView> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -199,27 +199,13 @@ export class ApiClient {
         }
         return _observableOf(null as any);
     }
-}
-
-@Injectable({
-    providedIn: 'root'
-  })
-export class AddClient {
-    private http: HttpClient;
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
-        this.http = http;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
-    }
 
     /**
      * @param body (optional) 
      * @return Success
      */
     instance(body: InstanceView | undefined): Observable<boolean> {
-        let url_ = this.baseUrl + "/api/add_instance";
+        let url_ = this.baseUrl + "/api/add/instance";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -270,27 +256,13 @@ export class AddClient {
         }
         return _observableOf(null as any);
     }
-}
-
-@Injectable({
-    providedIn: 'root'
-  })
-export class SaveClient {
-    private http: HttpClient;
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
-        this.http = http;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
-    }
 
     /**
      * @param body (optional) 
      * @return Success
      */
-    instance(body: InstanceView | undefined): Observable<InstanceView> {
-        let url_ = this.baseUrl + "/api/save_instance";
+    instance2(body: InstanceView | undefined): Observable<InstanceView> {
+        let url_ = this.baseUrl + "/api/save/instance";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -306,11 +278,11 @@ export class SaveClient {
         };
 
         return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processInstance(response_);
+            return this.processInstance2(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
                 try {
-                    return this.processInstance(response_ as any);
+                    return this.processInstance2(response_ as any);
                 } catch (e) {
                     return _observableThrow(e) as any as Observable<InstanceView>;
                 }
@@ -319,7 +291,7 @@ export class SaveClient {
         }));
     }
 
-    protected processInstance(response: HttpResponseBase): Observable<InstanceView> {
+    protected processInstance2(response: HttpResponseBase): Observable<InstanceView> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -331,6 +303,119 @@ export class SaveClient {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result200 = InstanceView.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    instance3(body: string | undefined): Observable<boolean> {
+        let url_ = this.baseUrl + "/api/delete/instance";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processInstance3(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processInstance3(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<boolean>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<boolean>;
+        }));
+    }
+
+    protected processInstance3(response: HttpResponseBase): Observable<boolean> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    receiptPOST(body: ReceiptView | undefined): Observable<ReceiptView> {
+        let url_ = this.baseUrl + "/api/save/receipt";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processReceiptPOST(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processReceiptPOST(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<ReceiptView>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<ReceiptView>;
+        }));
+    }
+
+    protected processReceiptPOST(response: HttpResponseBase): Observable<ReceiptView> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ReceiptView.fromJS(resultData200);
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -390,12 +475,56 @@ export interface IInstanceView {
     recieptId?: string | undefined;
 }
 
+export class ReceiptView implements IReceiptView {
+    id!: string;
+    name?: string | undefined;
+    createdDate!: Date;
+
+    constructor(data?: IReceiptView) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ReceiptView {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReceiptView();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IReceiptView {
+    id?: string;
+    name?: string | undefined;
+    createdDate?: Date;
+}
+
 export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
     id!: string;
     name?: string | undefined;
     createdDate!: Date;
     instances!: InstanceView[];
-    
+
     constructor(data?: IReceiptWithInstancesView) {
         if (data) {
             for (var property in data) {

@@ -6,37 +6,42 @@
 
 <!--Карточка поступлений, которая состоит из двух табов -->
   <div>
-    <button nz-button nzType="link" routerLink="/receipts">Назад</button>
+    <button 
+    nz-button 
+    nzType="link" 
+    routerLink="/receipts"
+    [disabled]="(isWorkStatusOfReceiptIsEdit$ | async) || (isWorkStatusOfActiveInstanceIsEdit$ | async)">
+    Назад</button>
 
     <button
-      *ngIf="!(workStatusForReceipt$  | async)"
+      *ngIf="!(isWorkStatusOfReceiptIsEdit$  | async)"
       nz-button
       nzType="primary"
       (click)="editModeReceipt()"
-      [disabled]="(workStatusForReceipt$  | async)"
       >
         Редактировать
     </button>
 
     <button 
-      *ngIf="!(workStatusForReceipt$  | async)"
+      *ngIf="!(isWorkStatusOfReceiptIsEdit$ | async)"
       nz-button 
       nzType="primary" 
       nzDanger
-      [disabled]="!(isInstanceFormValid$ | async)">
+      [disabled]="(isWorkStatusOfActiveInstanceIsEdit$ | async)">
       Удалить
     </button>
 
     <button
-      *ngIf="(workStatusForReceipt$  | async)"
+      *ngIf="(isWorkStatusOfReceiptIsEdit$ | async)"
       nz-button 
       nzType="primary"
       [disabled]="!(isFormValid$ | async)"
-      (click)="saveChangeReceipt()">
+      (click)="saveChangeReceipt()"
+      [nzLoading]="isLoading$ | async">
       Сохранить изменения
     </button>
     <button 
-      *ngIf="(workStatusForReceipt$  | async)"
+      *ngIf="(isWorkStatusOfReceiptIsEdit$ | async)"
       nz-button 
       nzType="primary" 
       nzDanger
@@ -52,11 +57,11 @@
          <!--Информация о поступлении-->
 
           <!--Просмотр-->
-          <p *ngIf="!(workStatusForReceipt$  | async)"> Название: {{receiptName$ | async}}</p>
-          <p *ngIf="!(workStatusForReceipt$  | async)"> Дата создания: {{receiptCreatedDate$ | async | date:'medium'}}</p>
+          <p *ngIf="!(isWorkStatusOfReceiptIsEdit$ | async)"> Название: {{receiptName$ | async}}</p>
+          <p *ngIf="!(isWorkStatusOfReceiptIsEdit$ | async)"> Дата создания: {{receiptCreatedDate$ | async | date:'medium'}}</p>
 
           <!--Редактиирование-->
-         <form *ngIf="(workStatusForReceipt$  | async)" [formGroup]="receiptForm" nz-form>
+         <form *ngIf="(isWorkStatusOfReceiptIsEdit$ | async)" [formGroup]="receiptForm" nz-form>
 
           <!--Наименование-->
           <nz-form-item>
@@ -101,12 +106,15 @@
           <!--Добавить издание-->
           <button
             nz-button 
-            nzType="primary">
+            nzType="primary"
+            [disabled]="isWorkStatusOfActiveInstanceIsEdit$ | async"
+            (click)="addRowInstance()"
+            >
             Добавить издание
           </button>
 
            <!--Информация о книгах в режиме просмотра-->
-           <nz-table [nzData]="(instances$ | async)?? []">
+           <nz-table [nzData]="(tableOfInstances$ | async)?? []">
             <thead>
               <tr>
                 <th>Номер</th>
@@ -116,15 +124,16 @@
             </thead>
   
             <tbody>
-              <tr *ngFor="let instance of instances$ | async; index as i">
+              <tr *ngFor="let instance of tableOfInstances$ | async; index as i">
                
                 <td>{{i}}</td>
 
                  <!--Тут будем вызывать форму или ячейку таблицы-->
-                <td *ngIf="instance.id != (activeId$ | async) || !(workStatus$ | async)"> {{instance.info}} </td>
-                <!-- <td *ngIf="instance.id == (activeId$ | async) && !(workStatus$ | async)">{{(activeInstance$ | async)!.info}}</td> -->
+                <td *ngIf="instance.id != (activeId$ | async) || !(isWorkStatusOfActiveInstanceIsEdit$| async)"> {{instance.info}} </td>
 
-                <td *ngIf="instance.id == (activeId$ | async) && (workStatus$ | async)">
+                <td 
+                *ngIf="(instance.id == (activeId$ | async) && (isWorkStatusOfActiveInstanceIsEdit$ | async)) ||
+                instance.info == null">
                   <form [formGroup]="instanceForm" nz-form>
                     <nz-form-item>
                       <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Please input info!">
@@ -140,40 +149,39 @@
                   </form>
                 </td>
                 
-                <!-- <td *ngIf="instance.id == (activeId$ | async) && (workStatus$ | async)">
-                  <input  
-                    nz-input
-                    [(ngModel)]="instanceActive.info"
-                    nzSize="default" 
-                    placeholder="enter info"
-                    type="text" 
-                  />
-                </td> -->
-
-                
                 <td>
                   <!--Режим редактирования-->
                   <button
                     nz-button
                     nzType="link"
                     (click)="editMode(instance.id)"
-                    [disabled]="(workStatus$ | async) && instance.id == (activeId$ | async)"
+                    [disabled]="(isWorkStatusOfActiveInstanceIsEdit$ | async) || (isLoadingDelete$ | async)"
                     >
                     <span nz-icon nzType="edit" nzTheme="outline"></span>
                   </button>
 
                   <!--Сохранить изменения-->
                   <button 
-                  *ngIf="(workStatus$ | async) && instance.id == (activeId$ | async)" 
+                  *ngIf="(isWorkStatusOfActiveInstanceIsEdit$ | async) && instance.id == (activeId$ | async)" 
                   nz-button nzType="link" 
                   (click)="saveChengesInstance(instance.id)"
+                  [nzLoading]="isLoading$ | async"
                   [disabled]="!(isInstanceFormValid$ | async)">
                     <span nz-icon nzType="check" nzTheme="outline"></span>
                   </button>
 
                   <!--Отменить изменения-->
-                  <button *ngIf="(workStatus$ | async) && instance.id == (activeId$ | async)" nz-button nzType="link" (click)="stopChengesInstance(instance.id)">
+                  <button *ngIf="(isWorkStatusOfActiveInstanceIsEdit$ | async) && instance.id == (activeId$ | async)" nz-button nzType="link" (click)="stopChengesInstance(instance.id)">
                     <span nz-icon nzType="close" nzTheme="outline"></span>
+                  </button>
+
+                  <!--Удалить издание-->
+                  <button 
+                    *ngIf="instance.id != undefined && !(isWorkStatusOfActiveInstanceIsEdit$ | async)"
+                    nz-button nzType="link"
+                    [nzLoading]="(isLoadingDelete$ | async) && instance.id == (activeId$ | async)"
+                    (click)="deleteInstance(instance.id)">
+                    <span nz-icon nzType="delete" nzTheme="outline"></span>
                   </button>
                 </td>
               </tr>
@@ -188,4 +196,4 @@
   <div>{{receiptName$ | async | json}}</div>
   <div>{{receiptCreatedDate$ | async | json}}</div> -->
   <div>{{activeInstance$ | async | json}}</div>
-  <div>{{instanceActive | json}}</div>
+  <div>{{instanceForm.value.Info }}</div>

@@ -31,7 +31,7 @@ export class ApiClient {
     /**
      * @return Success
      */
-    receipts(): Observable<ReceiptWithInstancesView[]> {
+    receipts(): Observable<ReceiptView[]> {
         let url_ = this.baseUrl + "/api/receipts";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -50,14 +50,14 @@ export class ApiClient {
                 try {
                     return this.processReceipts(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ReceiptWithInstancesView[]>;
+                    return _observableThrow(e) as any as Observable<ReceiptView[]>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ReceiptWithInstancesView[]>;
+                return _observableThrow(response_) as any as Observable<ReceiptView[]>;
         }));
     }
 
-    protected processReceipts(response: HttpResponseBase): Observable<ReceiptWithInstancesView[]> {
+    protected processReceipts(response: HttpResponseBase): Observable<ReceiptView[]> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -71,7 +71,7 @@ export class ApiClient {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(ReceiptWithInstancesView.fromJS(item));
+                    result200!.push(ReceiptView.fromJS(item));
             }
             else {
                 result200 = <any>null;
@@ -204,7 +204,7 @@ export class ApiClient {
      * @param body (optional) 
      * @return Success
      */
-    instance(body: InstanceView | undefined): Observable<boolean> {
+    instance(body: InstanceView | undefined): Observable<InstanceView> {
         let url_ = this.baseUrl + "/api/add/instance";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -227,14 +227,14 @@ export class ApiClient {
                 try {
                     return this.processInstance(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<boolean>;
+                    return _observableThrow(e) as any as Observable<InstanceView>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<boolean>;
+                return _observableThrow(response_) as any as Observable<InstanceView>;
         }));
     }
 
-    protected processInstance(response: HttpResponseBase): Observable<boolean> {
+    protected processInstance(response: HttpResponseBase): Observable<InstanceView> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -245,8 +245,7 @@ export class ApiClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+            result200 = InstanceView.fromJS(resultData200);
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -303,6 +302,63 @@ export class ApiClient {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result200 = InstanceView.fromJS(resultData200);
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    instance3(body: string | undefined): Observable<boolean> {
+        let url_ = this.baseUrl + "/api/delete/instance";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processInstance3(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processInstance3(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<boolean>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<boolean>;
+        }));
+    }
+
+    protected processInstance3(response: HttpResponseBase): Observable<boolean> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -375,7 +431,6 @@ export class InstanceView implements IInstanceView {
     receiptName?: string | undefined;
     info?: string | undefined;
     recieptId?: string | undefined;
-
 
     constructor(data?: IInstanceView) {
         if (data) {

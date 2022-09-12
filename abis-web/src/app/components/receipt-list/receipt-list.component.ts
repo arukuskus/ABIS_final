@@ -1,22 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
-import { ApiClient, ReceiptWithInstancesView } from 'src/app/services/ApiService';
+import { ApiClient, ReceiptView, ReceiptWithInstancesView } from 'src/app/services/ApiService';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { BehaviorSubject } from 'rxjs';
 
 @UntilDestroy()
 @Component({
   selector: 'app-receipt-list',
   templateUrl: './receipt-list.component.html',
-  styleUrls: ['./receipt-list.component.css']
+  styleUrls: ['./receipt-list.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReceiptListComponent implements OnInit {
 
   // Список поступлений
-  receipts: ReceiptWithInstancesView[] = [];
-
-  // будем подписываться на изменение данных в эльфе
-  //receipts$ = this.repo.receipts$;
+  receipts$ = new BehaviorSubject<ReceiptView[]>([]);
   
   constructor(
     private apiService: ApiClient, 
@@ -28,7 +27,7 @@ export class ReceiptListComponent implements OnInit {
     this.apiService.receipts().pipe(untilDestroyed(this)).subscribe(
       {
         next: data => {
-          this.receipts = data;
+          this.receipts$.next(data);
         }
       }
     )

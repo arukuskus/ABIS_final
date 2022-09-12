@@ -15,7 +15,7 @@ export class InstanceComponent implements OnInit {
 
   
   useForm!: FormGroup;
-  instance = new InstanceView; // и наж этим я тупила 30 минут )))
+  instance = new InstanceView;
   isFormValid$ = new BehaviorSubject<boolean>(false);
   isLoading$ = new BehaviorSubject<boolean>(false);  // спиннер загрузки (наблюдаемое)
   //instances: InstanceView[] = [];

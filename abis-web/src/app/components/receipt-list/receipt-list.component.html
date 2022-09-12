@@ -7,22 +7,20 @@
 
   <!-- Табличка поступлений ng-zorro -->
     <div>
-      <div>
-        <nz-table [nzData]="receipts">
-            <thead>
-              <tr>
-                <th>Название</th>
-                <th>Дата создания</th>
-              </tr>
-            </thead>
-      
-            <tbody>
-              <tr *ngFor="let receipt of receipts">
-                <td> <a (click)="goTo(receipt.id)"> {{receipt.name}} </a></td>
-                <td>{{receipt.createdDate | date:'medium'}}</td>
-              </tr>
-            </tbody>
-        </nz-table>
-      </div>
+      <nz-table [nzData]="(receipts$ | async) ?? []">
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Дата создания</th>
+          </tr>
+        </thead>
+  
+        <tbody>
+          <tr *ngFor="let receipt of receipts$ | async">
+            <td> <a (click)="goTo(receipt.id)"> {{receipt.name}} </a></td>
+            <td>{{receipt.createdDate | date:'medium'}}</td>
+          </tr>
+        </tbody>
+      </nz-table>
     </div>
 </div>

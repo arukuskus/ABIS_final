@@ -54,3 +54,17 @@ C:\Progects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\refint\ABIS.Data.dll
 C:\Progects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ABIS.Data.pdb
 C:\Progects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ABIS.Data.genruntimeconfig.cache
 C:\Progects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ref\ABIS.Data.dll
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\bin\Debug\net6.0\ABIS.Data.deps.json
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\bin\Debug\net6.0\ABIS.Data.runtimeconfig.json
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\bin\Debug\net6.0\ABIS.Data.dll
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\bin\Debug\net6.0\ABIS.Data.pdb
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ABIS.Data.csproj.AssemblyReference.cache
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ABIS.Data.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ABIS.Data.AssemblyInfoInputs.cache
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ABIS.Data.AssemblyInfo.cs
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ABIS.Data.csproj.CoreCompileInputs.cache
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ABIS.Data.dll
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\refint\ABIS.Data.dll
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ABIS.Data.pdb
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ABIS.Data.genruntimeconfig.cache
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Data\obj\Debug\net6.0\ref\ABIS.Data.dll

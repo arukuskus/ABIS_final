@@ -750,11 +750,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Progects\\ABIS_final\\ABIS.Main\\ABIS.Data\\ABIS.Data.csproj",
+      "projectUniqueName": "C:\\Projects\\ABIS_final\\ABIS.Main\\ABIS.Data\\ABIS.Data.csproj",
       "projectName": "ABIS.Data",
-      "projectPath": "C:\\Progects\\ABIS_final\\ABIS.Main\\ABIS.Data\\ABIS.Data.csproj",
+      "projectPath": "C:\\Projects\\ABIS_final\\ABIS.Main\\ABIS.Data\\ABIS.Data.csproj",
       "packagesPath": "C:\\Users\\zyabliceva\\.nuget\\packages\\",
-      "outputPath": "C:\\Progects\\ABIS_final\\ABIS.Main\\ABIS.Data\\obj\\",
+      "outputPath": "C:\\Projects\\ABIS_final\\ABIS.Main\\ABIS.Data\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

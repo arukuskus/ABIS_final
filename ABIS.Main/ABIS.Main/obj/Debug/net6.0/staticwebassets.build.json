@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "iT/6hyHQ7H1ItZzDHSu9KrT220UWDGFAxC3Y192yM18=",
+  "Hash": "I5BqIHx7LwauL1ZS406RRrn4YU0Pl4+vnh+RXcO4xfc=",
   "Source": "ABIS.Main",
   "BasePath": "_content/ABIS.Main",
   "Mode": "Default",
@@ -10,17 +10,17 @@
     {
       "Name": "ABIS.Main\\wwwroot",
       "Source": "ABIS.Main",
-      "ContentRoot": "C:\\Progects\\ABIS_final\\ABIS.Main\\ABIS.Main\\wwwroot\\",
+      "ContentRoot": "C:\\Projects\\ABIS_final\\ABIS.Main\\ABIS.Main\\wwwroot\\",
       "BasePath": "_content/ABIS.Main",
       "Pattern": "**"
     }
   ],
   "Assets": [
     {
-      "Identity": "C:\\Progects\\ABIS_final\\ABIS.Main\\ABIS.Main\\wwwroot\\Index.html",
+      "Identity": "C:\\Projects\\ABIS_final\\ABIS.Main\\ABIS.Main\\wwwroot\\Index.html",
       "SourceId": "ABIS.Main",
       "SourceType": "Discovered",
-      "ContentRoot": "C:\\Progects\\ABIS_final\\ABIS.Main\\ABIS.Main\\wwwroot\\",
+      "ContentRoot": "C:\\Projects\\ABIS_final\\ABIS.Main\\ABIS.Main\\wwwroot\\",
       "BasePath": "_content/ABIS.Main",
       "RelativePath": "Index.html",
       "AssetKind": "All",
