@@ -32,6 +32,7 @@ import { ReceiptPageComponent } from './components/receipt-page/receipt-page.com
 import { ReceiptInfoComponent } from './components/receipt-info/receipt-info.component';
 import { ReceiptListComponent } from './components/receipt-list/receipt-list.component';
 import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
+import { ReceiptAddComponent } from './components/receipt-add/receipt-add.component';
 
 registerLocaleData(en);
 
@@ -45,7 +46,8 @@ registerLocaleData(en);
     InstancesComponent,
     ReceiptPageComponent,
     ReceiptListComponent,
-    ReceiptInfoComponent
+    ReceiptInfoComponent,
+    ReceiptAddComponent
   ],
   imports: [
     NzFormModule,

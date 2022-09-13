@@ -1,10 +1,11 @@
 import { formatDate } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { ApiClient, ReceiptWithInstancesView, InstanceView, ReceiptView } from 'src/app/services/ApiService';
+import { RandomService } from 'angular-auth-oidc-client/lib/flows/random/random.service';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { InstanceView, ReceiptView } from 'src/app/services/ApiService';
 import { InstancesStore } from 'src/app/services/instances.store';
 import { InstancesStoreService } from 'src/app/services/instances.store.service';
 
@@ -47,11 +48,7 @@ export class ReceiptInfoComponent implements OnInit {
   // id поступления, записанное в маршрут
   id: string | undefined
 
-  //Таблица с данными изданий
-  tableOfInstances$ = new BehaviorSubject<InstanceView[]>([]);
-
-  // тестим комбаайнЛатест
-  //combineLatest(this.activeId$, this.isWorkStatusOfActiveInstanceIsEdit$)
+  isEditMode: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -61,11 +58,17 @@ export class ReceiptInfoComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.instances$.subscribe(
-      data => {
-        this.tableOfInstances$.next(data);
-      }
-    )
+
+    // следим зазаполнением активного id и состоянием кнопки
+     combineLatest([this.activeId$, this.isWorkStatusOfActiveInstanceIsEdit$]).subscribe(([activeId, isEditWorkStatus]) => {
+       if(isEditWorkStatus){
+         // ну получили активный элемент и режим редактировния, а как использовать?
+         // вызовем метод, который возвращает режим использования
+         this.isEditMode = true;
+       }else if(!isEditWorkStatus){
+         this.isEditMode = false;
+       }
+     })
 
     // следим в каком поступлении мы находимся
     this.route.params.pipe(untilDestroyed(this)).subscribe(
@@ -74,7 +77,7 @@ export class ReceiptInfoComponent implements OnInit {
 
       this.initReceiptForm();
       this.initInstanceForm();
-      this.getInstances();
+      this.getInfoAboutRecieptAndInstances();
 
       // Следим за изменениями в форме поступлений
       this.receiptForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
@@ -106,8 +109,8 @@ export class ReceiptInfoComponent implements OnInit {
    private initReceiptForm(): void {
     this.receiptForm = this.fb.group(
       {
-        Name: [ this.receipt.name, [Validators.required] ],
-        CreatedDate: [ this.receipt.createdDate,  [Validators.required]]
+        Name: [ null, [Validators.required] ],
+        CreatedDate: [ null,  [Validators.required]]
       }
     );
   }
@@ -121,112 +124,79 @@ export class ReceiptInfoComponent implements OnInit {
     )
   }
 
-  getInstances() : void {
+  // Заполняем таблицу изданий и форму поступления
+  private getInfoAboutRecieptAndInstances() : void {
     // получили список изданий
     this.storeService.getInstances(this.id).pipe(untilDestroyed(this)).subscribe({
-      next:
-        result => {
+      next: result => {
+        // Сохраняем информацию о поступлении в модель данных
+        this.receipt.id = result.id;
+        this.receipt.name = result.name;
+        this. receipt.createdDate = result.createdDate;
 
-          // Сохраняем информацию о поступлении в модель данных
-          this.receipt.id = result.id;
-          this.receipt.name = result.name;
-          this. receipt.createdDate = result.createdDate;
-
-          // Инициализируем форму поступления
-          this.receiptForm.setValue({
-            Name: result.name,
-            CreatedDate: this.convertDateTime(result.createdDate)
-          });
-        }
-      }
-    );
-  }
-
-  // Сохранить изменения для поступлений
-  saveChangeReceipt(){
-    this.isLoading$.next(true);
-    
-    // сохраним результат из формы в промежуточную переменную
-    this.receipt.name = this.receiptForm.value.Name;
-    this.receipt.createdDate = new Date(this.receiptForm.value.CreatedDate);
-
-    // отправляемся на сервер эльф с данными поступления
-    this.storeService.saveNewReceipt(this.receipt).subscribe({
-      next:()=>{},
-      error:()=>{},
-      complete:()=>{
-        this.isLoading$.next(false);
-        this.isWorkStatusOfReceiptIsEdit$ .next(false);
-      }
-    });
-  }
-
-  // Отменить изменения
-  stopChengesReceipt(){
-    this.isWorkStatusOfReceiptIsEdit$.next(false);
-
-    // выдаем значение из свойств хранилища на форму
-     this.receiptForm.setValue({
-       Name: this.receipt.name,
-       CreatedDate: this.convertDateTime(this.receipt.createdDate)
-     })
-    
-  }
-
-  // Сохранить изменения для изданий
-  saveChengesInstance(id: string) {
-
-    this.isLoading$.next(true);
-    // сохраним результат из формы в промежуточную переменную
-    this.instanceActive.info = this.instanceForm.value.Info;
-
-    // если id неизвестно, значит находимся в режиме добавления нового поступления
-    if(id == undefined){
-      this.instanceActive.recieptId = this.id; //добавляем id поступления из url
-      this.storeService.addNewInstance(this.instanceActive).subscribe(
-        {
-          next: () =>{
-            this.instances$.subscribe(data => {this.tableOfInstances$.next(data)});
-            // отчищаем форму
-            this.instanceForm.setValue({Info: ''});
-          },
-          error: ()=>{ this.isLoading$.next(false); }, 
-          complete: () => {
-            this.isLoading$.next(false); 
-            this.isWorkStatusOfActiveInstanceIsEdit$.next(false);} 
-        }
-      );
-    }else{
-      this.store.setActiveId(id);
-      // в режиме изменения существующего издания
-      this.storeService.saveNewInstance(this.instanceActive).subscribe(
-        {
-          next: () =>{ 
-            // отчищаем форму
-            this.instanceForm.setValue({Info: ''});
-          },
-          error: ()=>{ this.isLoading$.next(false); }, 
-          complete: () => {
-            this.isLoading$.next(false); 
-            this.isWorkStatusOfActiveInstanceIsEdit$.next(false);
-            this.store.resetActiveId(); // сбросить активный id
-          } 
+        // Инициализируем форму поступления
+        this.receiptForm.setValue({
+          Name: result.name,
+          CreatedDate: this.convertDateTime(result.createdDate)
         });
+      }});
+  }
+
+  //##################### Все что связано с изданиями #######################
+
+  // Сохранить издание/Добавить издание
+  saveChangesInstance(id: string) {
+
+    this.isWorkStatusOfActiveInstanceIsEdit$.next(false);
+
+    // режим добавления нового элемента
+    if(id == undefined){
+      //сначала удалим пустой элемент
+      this.store.deleteInstance(id);
+
+      // сохраним даные из формы в модель и добавим новое издание
+      this.instanceActive.id = this.getRandomInt().toString();
+      this.instanceActive.info = this.instanceForm.value.Info;
+      this.instanceActive.recieptId = this.id;
+
+      // Добавим издание в хранилище
+      this.storeService.addNewInstance(this.instanceActive);
+
+      // Очистим форму
+      this.instanceForm.setValue({Info: ''});
+
+      // Отчистим модель данных
+      this.instanceActive = new InstanceView();
+
+    }else{
+      // режим редактирования существующей записи
+
+      this.instanceActive.id = id;
+      this.instanceActive.info = this.instanceForm.value.Info;
+      this.instanceActive.recieptId = this.id;
+
+      this.storeService.saveNewInstance(this.instanceActive);
+
+      // Очистим форму
+      this.instanceForm.setValue({Info: ''});
+
+      // Отчистим модель данных
+      this.instanceActive = new InstanceView();
     }
   }
 
   // Отмена изменений для изданий
   stopChengesInstance(id: string) {
-
     this.isWorkStatusOfActiveInstanceIsEdit$.next(false);
 
     // отчистим строку, если пользователь передумал добавлять издание
     if(id == undefined){
-      this.instances$.subscribe(data => {this.tableOfInstances$.next(data)});
+      // обновление хранилища
+      this.store.deleteInstance(id);
       // отчищаем форму
       this.instanceForm.setValue({Info: ''});
     }else{
-      // изменим строку
+      // выберем активный элемент
       this.store.setActiveId(id);
 
       this.activeInstance$.subscribe(
@@ -242,31 +212,17 @@ export class ReceiptInfoComponent implements OnInit {
       // отчищаем форму
       this.instanceForm.setValue({Info: ''});
 
+      this.instanceActive = new InstanceView(); //jnxboftv vjltkm
+
       this.store.resetActiveId(); // сбросить активный id
     }
   }
 
+  // Удалить издание из эльфа
   deleteInstance(id: string){
-    //this.isWorkStatusOfActiveInstanceIsEdit$.next(true);
-    // отчистим строку, еслии пустой id
-    if(id == undefined){
-      this.instances$.subscribe(data => {this.tableOfInstances$.next(data)})
-      this.store.resetActiveId(); // сбросить активный id
-    }else{
-      this.store.setActiveId(id); // определяем активный элемент
-      this.isLoadingDelete$.next(true);
-      // удалим элемент
-      this.storeService.deleteInctance(id).subscribe(
-        {
-          next: () =>{},
-          error: ()=>{}, 
-          complete: () => {
-            this.isLoadingDelete$.next(false);
-            this.store.resetActiveId(); // сбросить активный id
-          }
-        }
-      );
-    }
+    this.store.setActiveId(id); // определяем активный элемент
+    this.storeService.deleteInctance(id);
+    this.store.resetActiveId(); // сбрасываем активный элемент
   }
 
   // режим редактировния Издания (клик по карандашу)
@@ -284,9 +240,10 @@ export class ReceiptInfoComponent implements OnInit {
       }
     )
 
+    this.isWorkStatusOfReceiptIsEdit$.next(true);
     this.isWorkStatusOfActiveInstanceIsEdit$.next(true);
 
-    return combineLatest([this.activeId$, this.isWorkStatusOfActiveInstanceIsEdit$]).subscribe();
+    //return combineLatest([this.activeId$, this.isWorkStatusOfActiveInstanceIsEdit$]).subscribe();
   }
 
   // Режим редактирования поступления
@@ -294,24 +251,36 @@ export class ReceiptInfoComponent implements OnInit {
     this.isWorkStatusOfReceiptIsEdit$.next(true);
   }
 
-  // Что - то мне кажется это полным бредом
+  // Что - то мне кажется это странным
   addRowInstance(){
+    const newRow = new InstanceView();
+    this.storeService.addNewInstance(newRow);
 
-    this.instances$.subscribe(
-      data => {
-        //data = [...data, new InstanceView()];
-        const newRow = new InstanceView();
-        newRow.info = "";
-        const newList = [newRow].concat(data);
-        this.tableOfInstances$.next(newList);
+    //  this.instances$.subscribe(
+    //    data => {
 
-        // Заполняем реактивную форму
-        this.tableOfInstances$.subscribe(data =>{
-          this.instanceForm.setValue({Info: data[0].info})
-        })
-      }
-    )
+    //      const newRow = new InstanceView();
+    //      data = [newRow].concat(data);
+    //    }
+    //  )
     this.isWorkStatusOfActiveInstanceIsEdit$.next(true);
+  }
+
+  // Сохранить изменения
+  saveChanges(){
+    // тут лезем в бд через сервис эльфа, чтобы обновить данные
+    this.isWorkStatusOfReceiptIsEdit$ .next(false);
+  }
+
+  // Отменить изменения
+  cancleChanges(){
+    this.isWorkStatusOfReceiptIsEdit$.next(false);
+    // отчищаем хранилище
+    this.store.deleteEntities();
+    // отчищаем свойства
+    this.store.setNewProps('', '', new Date());
+    // тут лезем в бд через сервис эльфа, чтобы восстановить данные
+    this.getInfoAboutRecieptAndInstances();
   }
 
   // Перевод даты и времени в нужный формат
@@ -320,4 +289,10 @@ export class ReceiptInfoComponent implements OnInit {
     date.setTime(date.getTime() + (timeZone * 60)  * 60 * 1000);
     return date.toISOString().slice(0,16);
   }
+
+  // Рандомный id для издания
+  private getRandomInt( ) {
+    return Math.floor(Math.random() * 10);
+  }
+
 }

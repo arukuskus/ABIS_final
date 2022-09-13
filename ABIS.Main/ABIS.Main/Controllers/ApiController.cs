@@ -221,7 +221,7 @@ namespace ABIS.Main.Controllers
         /// </summary>
         [HttpPost]
         [Route("save/receipt")]
-        public async Task<ReceiptView> SaveReceipt([FromBody] ReceiptView newReceipt, CancellationToken cancellationToken)
+        public async Task<ReceiptWithInstancesView> SaveReceipt([FromBody] ReceiptWithInstancesView newReceipt, CancellationToken cancellationToken)
         {
             // это вместо валидации параметров
             if (newReceipt == null)
@@ -231,18 +231,62 @@ namespace ABIS.Main.Controllers
 
             using (var dbContextTransaction = _aBISContext.Database.BeginTransaction())
             {
+                // Поступление, которое будем обновлять
                 var receipt = await (from i in _aBISContext.Receipts
                                       where i.Id == newReceipt.Id
                                       select i).SingleOrDefaultAsync(cancellationToken);
+
+                // Если такого поступления нет, то возвращаем ошибку
                 if (receipt == null)
                 {
                     throw new Exception("раз такого издания нет, то и обновлять нечего");
                 }
 
-                receipt.Name = newReceipt.Name;
-                receipt.CreatedDate = newReceipt.CreatedDate;
+                // Издания, которые относятся к поступлению
+                var dbInstances = await _aBISContext.Instances.Where(x=> x.RecieptId == newReceipt.Id).ToListAsync(cancellationToken);
 
-                var result = new ReceiptView
+                var toDeleteFromDbInstances = dbInstances.ToList();
+
+                foreach(var vmInstance in newReceipt.Instances)
+                {
+                    var dbInstane = dbInstances.SingleOrDefault(s => s.Id == vmInstance.Id);
+                    // если такой элемент есть в бд, удалим его из списка на удаление
+                   if (dbInstane is null) {
+                      //внесем это издание на удаление
+                      toDeleteFromDbInstances.Remove(dbInstane);
+
+                        // а еще обновим
+                        //update
+                        dbInstane.Info = vmInstance.Info;
+
+                    }
+                    else
+                    {
+                        
+
+                        // добавим в бд элемент, который не пришел извне
+                        
+                    }
+                }
+                _aBISContext.Instances.RemoveRange(toDeleteFromDbInstances);
+
+
+                ////Удалим из бд издания
+                //foreach (var delInstance in toDeleteFromDbInstances)
+                //{
+
+                //    _aBISContext.Instances.Remove(delInstance);
+                //    await _aBISContext.SaveChangesAsync(cancellationToken);
+                //}
+
+                ////Теперь пробежимся по списку новых изданий и обновим бд
+                //foreach(var instance in newReceipt.Instances  )
+
+
+                //receipt.Name = newReceipt.Name;
+                //receipt.CreatedDate = newReceipt.CreatedDate;
+
+                var result = new ReceiptWithInstancesView
                 {
                     Id = newReceipt.Id,
                     Name = newReceipt.Name,

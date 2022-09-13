@@ -12,9 +12,11 @@ import {
      selectEntity,
      addEntities,
      deleteEntities,
-     resetActiveId
+     resetActiveId,
+     deleteAllEntities
     } from "@ngneat/elf-entities";
 import { selectRequestStatus } from "@ngneat/elf-requests";
+import { BehaviorSubject, combineLatest } from "rxjs";
 
 import { InstanceView, ReceiptWithInstancesView } from "./ApiService";
 
@@ -42,6 +44,20 @@ const store = new Store({ name: 'instances', state, config }); // так наз�
 })
 export class InstancesStore {
 
+  isSaveLoading$ = new BehaviorSubject<boolean>(false);
+  isCancleLoading$ = new BehaviorSubject<boolean>(false);
+
+  // Если какая - либо из загрузок работает, блокируем кнопки
+  isLoading = combineLatest([this.isSaveLoading$, this.isCancleLoading$]).subscribe(
+    (([isSaveLoading, isCancleLoading]) => {
+      if(isSaveLoading || isCancleLoading){
+         true;
+      }else{
+        false;
+      }
+    })
+  )
+
   receiptId$ = store.pipe(select((state) => state.receiptId));
   receiptName$ = store.pipe(select((state) => state.name));
   receiptDateCreated$ = store.pipe(select((state) => state.createdDate));
@@ -49,6 +65,11 @@ export class InstancesStore {
   instances$ = store.pipe(selectAllEntities()); // возвращает observable
   activeInstance$ = store.pipe(selectActiveEntity()); // активное издание
   activeId$ = store.pipe(selectActiveId()); // активное id
+
+  // отчистить храилище от всех сущностей
+  deleteEntities(){
+    store.update(deleteAllEntities());
+  }
 
   // сбросить активный id
   resetActiveId(){
