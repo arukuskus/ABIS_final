@@ -33,6 +33,7 @@ import { ReceiptInfoComponent } from './components/receipt-info/receipt-info.com
 import { ReceiptListComponent } from './components/receipt-list/receipt-list.component';
 import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
 import { ReceiptAddComponent } from './components/receipt-add/receipt-add.component';
+import { InstancesStore } from './services/instances.store';
 
 registerLocaleData(en);
 
@@ -74,7 +75,7 @@ registerLocaleData(en);
       provide: API_BASE_URL,
       useValue: "https://localhost:7155"
     },
-    { provide: NZ_I18N, useValue: en_US },
+    { provide: NZ_I18N, useValue: en_US }
     //NzTableModule // чтобы можно было пользоваться где угодно
 
   ],

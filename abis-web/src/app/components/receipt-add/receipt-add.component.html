@@ -10,17 +10,19 @@
     routerLink="/receipts">
     Назад</button>
 
-    <button
-      nz-button
-      nzType="primary"
-      >
-        Провести
-    </button>
-
     <button 
       nz-button 
-      nzType="primary" >
+      nzType="primary" 
+      [disabled]="!(isFormValid$ | async)"
+      (click)="saveReceipt()">
       Сохранить
+    </button>
+      
+    <button
+      nz-button 
+      nzType="primary"
+      nzDanger>
+      Отменить
     </button>
     
     <div>
@@ -81,7 +83,7 @@
           </button>
 
            <!--Информация о книгах в режиме просмотра-->
-           <nz-table [nzData]="(tableOfInstances$ | async)?? []">
+           <nz-table [nzData]="(instances$ | async)?? []">
             <thead>
               <tr>
                 <th>Номер</th>
@@ -91,7 +93,7 @@
             </thead>
   
             <tbody>
-              <tr *ngFor="let instance of tableOfInstances$ | async; index as i">
+              <tr *ngFor="let instance of instances$ | async; index as i">
                
                 <td>{{i}}</td>
 
@@ -116,37 +118,49 @@
                 </td>
 
                 <td>
-                    <!--Режим редактирования-->
-                    <button
-                      nz-button
-                      nzType="link">
-                      <span nz-icon nzType="edit" nzTheme="outline"></span>
-                    </button>
-  
-                    <!--Сохранить изменения-->
-                    <button 
-                    nz-button 
-                    nzType="link" >
-                      <span nz-icon nzType="check" nzTheme="outline"></span>
-                    </button>
-  
-                    <!--Отменить изменения-->
-                    <button 
-                    nz-button 
-                    nzType="link">
-                      <span nz-icon nzType="close" nzTheme="outline"></span>
-                    </button>
-  
-                    <!--Удалить издание-->
-                    <button 
-                      nz-button 
-                      nzType="link">
-                      <span nz-icon nzType="delete" nzTheme="outline"></span>
-                    </button>
-                  </td>
+                     <!--Режим редактирования (карандашик)-->
+                  <button
+                  nz-button
+                  nzType="link"
+                  (click)="editMode(instance.id)"
+                  [disabled]="isLoading || isEditMode">
+                  <span nz-icon nzType="edit" nzTheme="outline"></span>
+                </button>
+
+                <!--Сохранить изменения (галочка)-->
+                <button 
+                  *ngIf="isEditMode && instance.id == (activeId$ | async)" 
+                  nz-button 
+                  nzType="link" 
+                  (click)="saveChangesInstance(instance.id)"
+                  [disabled]="!(isInstanceFormValid$ | async) || isLoading">
+                  <span nz-icon nzType="check" nzTheme="outline"></span>
+                </button>
+
+                <!--Отменить изменения-->
+                <button 
+                  *ngIf="isEditMode && instance.id == (activeId$ | async)" 
+                  nz-button
+                  nzType="link"
+                  [disabled]="isLoading"
+                  (click)="stopChangesInstance(instance.id)">
+                  <span nz-icon nzType="close" nzTheme="outline"></span>
+                </button>
+
+                <!--Удалить издание-->
+                <button 
+                  *ngIf="instance.id != undefined && !isEditMode"
+                  nz-button 
+                  nzType="link"
+                  (click)="deleteInstance(instance.id)"
+                  [disabled]="isLoading">
+                  <span nz-icon nzType="delete" nzTheme="outline"></span>
+                </button>
+              </td>
               </tr>
             </tbody>
           </nz-table>
+          <div>{{instanceForm.value | json}}</div>
         </nz-tab>
 
         <nz-tab nzTitle="Файлы">

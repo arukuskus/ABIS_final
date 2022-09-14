@@ -10,7 +10,7 @@
     nz-button 
     nzType="link" 
     routerLink="/receipts"
-    [disabled]="(isWorkStatusOfReceiptIsEdit$ | async) || isEditMode">
+    [disabled]="isLoading || (isWorkStatusOfReceiptIsEdit$ | async)">
     Назад</button>
 
     <button
@@ -26,8 +26,7 @@
       *ngIf="!(isWorkStatusOfReceiptIsEdit$ | async)"
       nz-button 
       nzType="primary" 
-      nzDanger
-      [disabled]="(isWorkStatusOfActiveInstanceIsEdit$ | async)">
+      nzDanger>
       Удалить
     </button>
 
@@ -40,12 +39,14 @@
       [nzLoading]="isLoading$ | async">
       Сохранить изменения
     </button>
+
     <button 
       *ngIf="(isWorkStatusOfReceiptIsEdit$ | async)"
       nz-button 
       nzType="primary" 
       nzDanger
-      (click)="cancleChanges()">
+      (click)="cancleChanges()"
+      [disabled]="isLoading">
       Отменить изменения
     </button>
     
@@ -61,7 +62,11 @@
           <p *ngIf="!(isWorkStatusOfReceiptIsEdit$ | async)"> Дата создания: {{receiptCreatedDate$ | async | date:'medium'}}</p>
 
           <!--Редактиирование-->
-         <form *ngIf="(isWorkStatusOfReceiptIsEdit$ | async)" [formGroup]="receiptForm" nz-form>
+         <form 
+          *ngIf="(isWorkStatusOfReceiptIsEdit$ | async)" 
+          [formGroup]="receiptForm" 
+          nz-form
+         >
 
           <!--Наименование-->
           <nz-form-item>
@@ -96,9 +101,6 @@
               </nz-form-control>
           </nz-form-item>
         </form>
-
-        <div>{{receiptForm.value | json}}</div>
-
         </nz-tab>
 
         <nz-tab nzTitle="Издания">
@@ -107,7 +109,7 @@
           <button
             nz-button 
             nzType="primary"
-            [disabled]="isEditMode"
+            [disabled]="isEditMode || isLoading"
             (click)="addRowInstance()"
             >
             Добавить издание
@@ -150,40 +152,42 @@
                 </td>
                 
                 <td>
-                  <!--Режим редактирования-->
+                  <!--Режим редактирования (карандашик)-->
                   <button
                     nz-button
                     nzType="link"
                     (click)="editMode(instance.id)"
-                    [disabled]="isEditMode || (isLoadingDelete$ | async)"
-                    >
+                    [disabled]="isLoading || isEditMode">
                     <span nz-icon nzType="edit" nzTheme="outline"></span>
                   </button>
 
-                  <!--Сохранить изменения-->
+                  <!--Сохранить изменения (галочка)-->
                   <button 
-                  *ngIf="isEditMode && instance.id == (activeId$ | async)" 
-                  nz-button nzType="link" 
-                  (click)="saveChangesInstance(instance.id)"
-                  [nzLoading]="isLoading$ | async"
-                  [disabled]="!(isInstanceFormValid$ | async)">
+                    *ngIf="isEditMode && instance.id == (activeId$ | async)" 
+                    nz-button 
+                    nzType="link" 
+                    (click)="saveChangesInstance(instance.id)"
+                    [disabled]="!(isInstanceFormValid$ | async) || isLoading">
                     <span nz-icon nzType="check" nzTheme="outline"></span>
                   </button>
 
                   <!--Отменить изменения-->
                   <button 
-                  *ngIf="isEditMode && instance.id == (activeId$ | async)" 
-                  nz-button nzType="link" 
-                  (click)="stopChengesInstance(instance.id)">
+                    *ngIf="isEditMode && instance.id == (activeId$ | async)" 
+                    nz-button
+                    nzType="link"
+                    [disabled]="isLoading"
+                    (click)="stopChangesInstance(instance.id)">
                     <span nz-icon nzType="close" nzTheme="outline"></span>
                   </button>
 
                   <!--Удалить издание-->
                   <button 
                     *ngIf="instance.id != undefined && !isEditMode"
-                    nz-button nzType="link"
-                    [nzLoading]="(isLoadingDelete$ | async) && instance.id == (activeId$ | async)"
-                    (click)="deleteInstance(instance.id)">
+                    nz-button 
+                    nzType="link"
+                    (click)="deleteInstance(instance.id)"
+                    [disabled]="isLoading">
                     <span nz-icon nzType="delete" nzTheme="outline"></span>
                   </button>
                 </td>
@@ -206,5 +210,5 @@
   <!-- <div>{{receiptId$ | async | json}}</div>
   <div>{{receiptName$ | async | json}}</div>
   <div>{{receiptCreatedDate$ | async | json}}</div> -->
-  <div>{{activeInstance$ | async | json}}</div>
-  <div>{{instanceForm.value.Info }}</div>
+  <!-- <div>{{activeInstance$ | async | json}}</div>
+  <div>{{instanceForm.value.Info }}</div> -->

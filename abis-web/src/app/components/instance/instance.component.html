@@ -2,7 +2,6 @@
 <button
     nz-button
     nzType="primary"
-    (click)="addInstance()"
     [disabled]="!(isFormValid$ | async)"
     [nzLoading]="isLoading$ | async">
     Add Instance

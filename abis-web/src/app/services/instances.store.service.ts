@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { ApiClient, InstanceView, ReceiptView } from './ApiService';
+import { ApiClient, InstanceView, ReceiptView, ReceiptWithInstancesView } from './ApiService';
 import { InstancesStore } from './instances.store';
 
 @Injectable({
@@ -46,12 +44,32 @@ export class InstancesStoreService {
             this.store.setInstances(data.instances);
             this.store.setNewProps(data.id, data.name, data.createdDate);
         })
-    )
+    );
   }
 
   // Сохранить изменения в карточке поступлений
+  saveChangeOfReceipt(){
+    const newReceipt = new ReceiptWithInstancesView();
+    this.store.receiptId$.subscribe(data=>{newReceipt.id = data??''});
+    this.store.receiptDateCreated$.subscribe(data=>{newReceipt.createdDate = data});
+    this.store.receiptName$.subscribe(data=>{newReceipt.name = data});
 
+    this.store.instances$.subscribe(data=>{newReceipt.instances = data})
+
+    // ожидаем true или false
+    return this._apiService.receiptPOST(newReceipt).pipe();
+  }
 
   // Добавить поступление на бэк
+  addNewReceipt(){
+    const newReceipt = new ReceiptWithInstancesView();
+    this.store.receiptId$.subscribe(data=>{newReceipt.id = data??''});
+    this.store.receiptDateCreated$.subscribe(data=>{newReceipt.createdDate = data});
+    this.store.receiptName$.subscribe(data=>{newReceipt.name = data});
+
+    this.store.instances$.subscribe(data=>{newReceipt.instances = data});
+
+    return this._apiService.receiptPOST2(newReceipt).pipe();
+  }
 
 }

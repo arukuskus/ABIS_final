@@ -68,31 +68,31 @@ export class InstanceComponent implements OnInit {
     }
   }
 
-  addInstance() : void {  
-     if(this.useForm != null) {
+  // addInstance() : void {  
+  //    if(this.useForm != null) {
 
-      this.isLoading$.next(true);
+  //     this.isLoading$.next(true);
 
-      // Заполняем книгу
-       this.instance.receiptName = this.useForm.value.receiptName;
-       this.instance.info = this.useForm.value.info;
+  //     // Заполняем книгу
+  //      this.instance.receiptName = this.useForm.value.receiptName;
+  //      this.instance.info = this.useForm.value.info;
 
-       // Теперь вызовем метод апи
-       this.apiClient.instance(this.instance).subscribe({
-        next: (res) => {
-          if(res){
-            alert("книга успешно добавлена")
-          }else{
-            alert("не удалось добавить книгу")
-          }
-        },
-        error: (err) => {
+  //      // Теперь вызовем метод апи
+  //      this.apiClient.instance(this.instance).subscribe({
+  //       next: (res) => {
+  //         if(res){
+  //           alert("книга успешно добавлена")
+  //         }else{
+  //           alert("не удалось добавить книгу")
+  //         }
+  //       },
+  //       error: (err) => {
           
-        },
-        complete: () => {
-          this.isLoading$.next(false);
-        }
-       });
-     }
-  }
+  //       },
+  //       complete: () => {
+  //         this.isLoading$.next(false);
+  //       }
+  //      });
+  //    }
+  // }
 }

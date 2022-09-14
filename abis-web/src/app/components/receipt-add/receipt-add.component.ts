@@ -1,10 +1,14 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Guid } from 'guid-ts';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { InstanceView, ReceiptView } from 'src/app/services/ApiService';
-import { InstancesStore } from 'src/app/services/instances.store';
+import { 
+  InstancesStore,
+  InstancesStoreProvider
+ } from 'src/app/services/instances.store';
 import { InstancesStoreService } from 'src/app/services/instances.store.service';
 
 @UntilDestroy()
@@ -12,7 +16,8 @@ import { InstancesStoreService } from 'src/app/services/instances.store.service'
   selector: 'app-receipt-add',
   templateUrl: './receipt-add.component.html',
   styleUrls: ['./receipt-add.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [InstancesStoreProvider, InstancesStoreService]
 })
 export class ReceiptAddComponent implements OnInit {
 
@@ -28,8 +33,7 @@ export class ReceiptAddComponent implements OnInit {
   receipt = new ReceiptView();
   instanceActive = new InstanceView();
 
-  // спиннеры загрузки
-  isLoading$ = new BehaviorSubject<boolean>(false);
+  isLoading$ = this.store.isSaveLoading$;  // спиннер загрузки
   isLoadingDelete$ = new BehaviorSubject<boolean>(false);
 
   // Хранилище
@@ -40,37 +44,48 @@ export class ReceiptAddComponent implements OnInit {
   activeInstance$ = this.store.activeInstance$;
   activeId$ = this.store.activeId$;
 
-  // Режим работы
+  isLoading: boolean = false;  //блокировка кнопок при загрузке данных в бд или ее отмене
+  isEditMode: boolean = false; //режим редактирования
+
+  // Режим работы для поступления и изданий
   isWorkStatusOfReceiptIsEdit$ = new BehaviorSubject<boolean>(false);
   isWorkStatusOfActiveInstanceIsEdit$ = new BehaviorSubject<boolean>(false);
 
   // id поступления, записанное в маршрут
-  id: string | undefined
-
-  //Таблица с данными изданий
-  tableOfInstances$ = new BehaviorSubject<InstanceView[]>([]);
-
-  isEditMode: boolean = false;
+  receiptIdFromUrl: string | undefined
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
+    private router: Router,
     private store: InstancesStore, // хранилище данных
     private storeService: InstancesStoreService // сервис для работы с хранилищем
   ) { }
 
   ngOnInit(): void {
 
-    // заполняем таблицу изданиями
-    this.instances$.subscribe(
-      data => {
-        this.tableOfInstances$.next(data);
+    this.store.isLoading.subscribe(data=>{
+      if(data){
+        this.isLoading = true;
+      }else{
+        this.isLoading =false;
       }
-    )
+    });
+    this.instances$.subscribe((res) => console.log(`Данные изменились: `, res));
+
+    // следим зазаполнением активного id и состоянием кнопки
+    combineLatest([this.activeId$, this.isWorkStatusOfActiveInstanceIsEdit$]).subscribe(([activeId, isEditWorkStatus]) => {
+      if(isEditWorkStatus){
+        // ну получили активный элемент и режим редактировния, а как использовать?
+        // вызовем метод, который возвращает режим использования
+        this.isEditMode = true;
+      }else if(!isEditWorkStatus){
+        this.isEditMode = false;
+      }
+    })
 
       this.initReceiptForm();
       this.initInstanceForm();
-      this.getInstances();
 
       // Следим за изменениями в форме поступлений
       this.receiptForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
@@ -117,19 +132,100 @@ export class ReceiptAddComponent implements OnInit {
     )
   }
 
-  // Заполняем таблицу изданий и форму поступления
-  getInstances() : void {
-    
-  }
-
-
   // Сохранить поступление
   saveReceipt() {
+    // из формы поступления сохраним информацию в эльф
+    this.receipt.id = Guid.newGuid().toString();
+    this.receipt.createdDate = new Date(this.receiptForm.value.CreatedDate);
+    this.receipt.name = this.receiptForm.value.Name;
+
+    this.storeService.saveNewReceipt(this.receipt);
+
+    this.storeService.addNewReceipt().subscribe(
+      {
+        next:(data)=>{
+          if(data){
+            //возвращаемся на страницу поступлений
+            this.router.navigate(['receipts']);
+          }else{
+            alert("Что - то пошло не так");
+          }
+        },
+        error:()=>{},
+        complete:()=>{}
+      }
+    )
+  }
+
+  // Сохранить издание/Добавить издание
+  saveChangesInstance(id: string) {
+
+    this.isWorkStatusOfActiveInstanceIsEdit$.next(false);
+
+    // режим добавления нового элемента
+    if(id == undefined){
+      //сначала удалим пустой элемент
+      this.store.deleteInstance(id);
+
+      // сохраним даные из формы в модель и добавим новое издание
+      this.instanceActive.id = Guid.newGuid().toString();
+      this.instanceActive.info = this.instanceForm.value.Info;
+
+      // Добавим издание в хранилище
+      this.storeService.addNewInstance(this.instanceActive);
+    }else{
+      // режим редактирования существующей записи
+
+      this.instanceActive.id = id;
+      this.instanceActive.info = this.instanceForm.value.Info;
+
+      this.storeService.saveNewInstance(this.instanceActive);
+    }
+
+    // Отчистим модель данных
+    this.instanceActive = new InstanceView();
+    this.store.resetActiveId(); // сбросить активный id
+    // отчищаем форму
+    this.instanceForm.setValue({Info: ''});
+
+    // где - то нужно заменить на patchValue при изменении одного элемента формы  
+  }
+
+  // Отмена изменений для изданий
+  stopChangesInstance(id: string) {
+    this.isWorkStatusOfActiveInstanceIsEdit$.next(false);
+
+    // отчистим строку, если пользователь передумал добавлять издание
+    if(id == undefined){
+      this.store.deleteInstance(id);
+    }else{
+      // выберем активный элемент
+      this.store.setActiveId(id);
+
+      this.activeInstance$.subscribe(
+        result => { 
+          this.instanceActive.id = result?.id ?? '';
+          this.instanceActive.info = result?.info;
+
+          // Заполняем реактивную форму
+          this.instanceForm.setValue({Info: result?.info});
+        }
+      )
+
+      // отчищаем форму
+      this.instanceForm.setValue({Info: ''});
+
+      this.instanceActive = new InstanceView(); //отчищаем модель данных
+
+      this.store.resetActiveId(); // сбросить активный id
+    }
   }
 
   // Удалить строку издания
   deleteInstance(id: string) {
-
+    this.store.setActiveId(id); // определяем активный элемент
+    this.storeService.deleteInctance(id);
+    this.store.resetActiveId(); // сбрасываем активный элемент
   }
 
   // режим редактировния Издания (клик по карандашу)
@@ -152,28 +248,9 @@ export class ReceiptAddComponent implements OnInit {
 
   // Добавление новой строки издания
   addRowInstance(){
-
-    this.instances$.subscribe(
-      data => {
-        const newRow = new InstanceView();
-        newRow.info = "";
-        const newList = [newRow].concat(data);
-        this.tableOfInstances$.next(newList);
-
-        // Заполняем реактивную форму
-        // this.tableOfInstances$.subscribe(data =>{
-        //   this.instanceForm.setValue({Info: data[0].info})
-        // })
-      }
-    )
+    const newRow = new InstanceView();
+    this.storeService.addNewInstance(newRow);
     this.isWorkStatusOfActiveInstanceIsEdit$.next(true);
-  }
-
-  // Перевод даты и времени в нужный формат
-  private convertDateTime(date: Date) : string {
-    let timeZone = (date.getTimezoneOffset()/60)*(-1);
-    date.setTime(date.getTime() + (timeZone * 60)  * 60 * 1000);
-    return date.toISOString().slice(0,16);
   }
 
 }

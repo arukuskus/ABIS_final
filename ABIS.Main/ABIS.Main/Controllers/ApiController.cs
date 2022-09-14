@@ -71,157 +71,11 @@ namespace ABIS.Main.Controllers
         }
 
         /// <summary>
-        /// Посмотреть все экземпляры
-        /// </summary>
-        [HttpGet]
-        [Route("instances")]
-        public async Task<List<InstanceView>> GetInstances(CancellationToken cancellationToken)
-        {
-            var instances = new List<InstanceView>();
-
-            var result = await _aBISContext.Instances.Select(x => new InstanceView()
-            {
-                Id = x.Id,
-                ReceiptName = x.ReceiptName,
-                Info = x.Info,
-                RecieptId = x.RecieptId
-            }).ToListAsync(cancellationToken);
-
-            return result;
-        }
-
-        /// <summary>
-        /// Добавление новой книги
-        /// </summary>
-        [HttpPost]
-        [Route("add/instance")]
-        public async Task<InstanceView> AddNewInstance([FromBody] InstanceView instance, CancellationToken cancellationToken)
-        {
-
-            if (instance.Info == null)
-            {
-                throw new Exception("Вы пытаетесь добавить пустой экземпляр");
-            }
-
-            // Открываем транзакцию
-            using (var context = _aBISContext.Database.BeginTransaction())
-            {
-                // Лезем в бд и смотрим что такой книги нет
-                var book = await(from i in _aBISContext.Instances
-                                 where i.Info == instance.Info && i.RecieptId == instance.RecieptId 
-                                 select i).SingleOrDefaultAsync(cancellationToken);
-
-                if (book != null)
-                {
-                    throw new Exception("Такой экземпляр уже есть");
-                }
-
-                // Проверяем что поступление существует в бд
-                var receipt = await(from r in _aBISContext.Receipts
-                                    where r.Id == instance.RecieptId
-                                    select r).SingleOrDefaultAsync(cancellationToken);
-                if(receipt == null)
-                {
-                     throw new Exception("Такого поступления не существует, пожалуйста выберете существующее поступление!");
-                }
-
-                var result = new InstanceView
-                {
-                    Id = Guid.NewGuid(),
-                    ReceiptName = receipt.Name,
-                    Info = instance.Info,
-                    RecieptId = receipt.Id
-                };
-
-                _aBISContext.Instances.Add(new Instance
-                {
-                    Id = (Guid)result.Id,
-                    ReceiptName = result.ReceiptName,
-                    Info = result.Info,
-                    RecieptId = (Guid)result.RecieptId
-                });
-
-                // Сохраним изменения  бд
-                await _aBISContext.SaveChangesAsync(cancellationToken);
-                await context.CommitAsync(); // Еще выведем комментарии
-
-                return result;
-            }
-        }
-
-        /// <summary>
-        /// Изменяетданные в выбранном издании и возвращает копию этого объекта
-        /// </summary>
-        [HttpPost]
-        [Route("save/instance")]
-        public async Task<InstanceView> SaveInstance([FromBody] InstanceView newInstance, CancellationToken cancellationToken)
-        {
-            // это вместо валидации параметров
-            if(newInstance == null) {
-                throw new Exception("хотите передать в sql что - то нехорошее");
-            }
-
-            using(var dbContextTransaction = _aBISContext.Database.BeginTransaction())
-            {
-                var instance = await (from i in _aBISContext.Instances
-                                      where i.Id == newInstance.Id
-                                      select i).SingleOrDefaultAsync(cancellationToken);
-                if (instance == null)
-                {
-                    throw new Exception("раз такого издания нет, то и обновлять нечего");
-                }
-
-                instance.Info = newInstance.Info;
-
-                var result = new InstanceView()
-                {
-                    Id = instance.Id,
-                    Info = instance.Info,
-                    ReceiptName = instance.ReceiptName,
-                    RecieptId = instance.RecieptId
-                };
-                await _aBISContext.SaveChangesAsync(cancellationToken);
-                await dbContextTransaction.CommitAsync(cancellationToken);
-
-                return result;
-            }
-        }
-
-        [HttpPost]
-        [Route("delete/instance")]
-        public async Task<bool> DeleteInstance([FromBody] Guid id, CancellationToken cancellationToken)
-        {
-
-            using(var dbContextTransaction = _aBISContext.Database.BeginTransaction())
-            {
-                var deleteInstance = await _aBISContext.Instances.Select(i => new Instance()
-                {
-                    Id = i.Id,
-                    Info = i.Info,
-                    ReceiptName = i.ReceiptName,
-                    RecieptId = i.RecieptId
-                }).Where(i => i.Id == id).SingleOrDefaultAsync(cancellationToken);
-
-                if (deleteInstance == null)
-                {
-                    return false;
-                }
-
-                _aBISContext.Instances.Remove(deleteInstance);
-
-                await _aBISContext.SaveChangesAsync(cancellationToken);
-                await dbContextTransaction.CommitAsync(cancellationToken);
-
-                return true;
-            }
-        }
-
-        /// <summary>
         /// Изменяет данные в выбранном поступлении и возвращает копию этого объекта
         /// </summary>
         [HttpPost]
         [Route("save/receipt")]
-        public async Task<ReceiptWithInstancesView> SaveReceipt([FromBody] ReceiptWithInstancesView newReceipt, CancellationToken cancellationToken)
+        public async Task<bool> SaveReceipt([FromBody] ReceiptWithInstancesView newReceipt, CancellationToken cancellationToken)
         {
             // это вместо валидации параметров
             if (newReceipt == null)
@@ -239,63 +93,111 @@ namespace ABIS.Main.Controllers
                 // Если такого поступления нет, то возвращаем ошибку
                 if (receipt == null)
                 {
-                    throw new Exception("раз такого издания нет, то и обновлять нечего");
+                    //throw new Exception("раз такого издания нет, то и обновлять нечего");
+                    return false;
                 }
+
+                // Сохраним информацию о поступлении
+                receipt.Name = newReceipt.Name;
+                receipt.CreatedDate = newReceipt.CreatedDate;
 
                 // Издания, которые относятся к поступлению
                 var dbInstances = await _aBISContext.Instances.Where(x=> x.RecieptId == newReceipt.Id).ToListAsync(cancellationToken);
 
+                // Список изданий на удаление
                 var toDeleteFromDbInstances = dbInstances.ToList();
 
                 foreach(var vmInstance in newReceipt.Instances)
                 {
+                    // Прилетевшее издание есть в бд?
                     var dbInstane = dbInstances.SingleOrDefault(s => s.Id == vmInstance.Id);
-                    // если такой элемент есть в бд, удалим его из списка на удаление
-                   if (dbInstane is null) {
-                      //внесем это издание на удаление
-                      toDeleteFromDbInstances.Remove(dbInstane);
 
-                        // а еще обновим
-                        //update
-                        dbInstane.Info = vmInstance.Info;
+                   if (dbInstane is null) {
+                        // такого издания нет в бд - добвим новое издание ы бд
+                        _aBISContext.Instances.Add(new Instance()
+                        {
+                            Id = new Guid(),
+                            Info = vmInstance.Info,
+                            ReceiptName = receipt.Name,
+                            RecieptId = receipt.Id
+                        });
 
                     }
                     else
                     {
-                        
-
-                        // добавим в бд элемент, который не пришел извне
+                        // такое издание есть в бд - уберем его из списка на удаление
+                        toDeleteFromDbInstances.Remove(dbInstane);
+                        // обновим о нем информацию
+                        dbInstane.Info = vmInstance.Info;
                         
                     }
                 }
+                // Удалим из бд издания, которые были в бд, но не пришли с новым списком извне
                 _aBISContext.Instances.RemoveRange(toDeleteFromDbInstances);
 
-
-                ////Удалим из бд издания
-                //foreach (var delInstance in toDeleteFromDbInstances)
-                //{
-
-                //    _aBISContext.Instances.Remove(delInstance);
-                //    await _aBISContext.SaveChangesAsync(cancellationToken);
-                //}
-
-                ////Теперь пробежимся по списку новых изданий и обновим бд
-                //foreach(var instance in newReceipt.Instances  )
-
-
-                //receipt.Name = newReceipt.Name;
-                //receipt.CreatedDate = newReceipt.CreatedDate;
-
-                var result = new ReceiptWithInstancesView
-                {
-                    Id = newReceipt.Id,
-                    Name = newReceipt.Name,
-                    CreatedDate = newReceipt.CreatedDate
-                };
                 await _aBISContext.SaveChangesAsync(cancellationToken);
                 await dbContextTransaction.CommitAsync(cancellationToken);
 
-                return result;
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Добавляет новое поступление
+        /// </summary>
+        [HttpPost]
+        [Route("add/receipt")]
+        public async Task<bool> AddNewReceipt([FromBody] ReceiptWithInstancesView newReceipt, CancellationToken cancellationToken)
+        {
+
+            // это вместо валидации параметров
+            if (newReceipt == null)
+            {
+                throw new Exception("пустой запрос");
+            }
+
+            if(newReceipt.Instances == null)
+            {
+                throw new Exception("издания должны передаваться вместе с поступлением");
+            }
+
+            using (var dbContextTransaction = _aBISContext.Database.BeginTransaction())
+            {
+                var receipt = await (from i in _aBISContext.Receipts
+                                     where i.Name == newReceipt.Name
+                                     select i).SingleOrDefaultAsync(cancellationToken);
+
+                // Если такое поступление есть
+                if (receipt != null)
+                {
+                    return false;
+                    //throw new Exception("такое поступление есть в бд");
+                }
+
+                // Сохраним поступление в бд
+                var bdReceipt = new Receipt()
+                {
+                    Id = new Guid(),
+                    CreatedDate = newReceipt.CreatedDate,
+                    Name = newReceipt.Name
+                };
+                _aBISContext.Receipts.Add(bdReceipt);
+
+                foreach(var newInstance in newReceipt.Instances)
+                {
+                    _aBISContext.Instances.Add(new Instance()
+                    {
+                        Id = new Guid(),
+                        Info = newInstance.Info,
+                        ReceiptName = bdReceipt.Name,
+                        RecieptId = bdReceipt.Id
+                    });
+                }
+
+                await _aBISContext.SaveChangesAsync(cancellationToken);
+                await dbContextTransaction.CommitAsync(cancellationToken);
+
+                return true;
             }
         }
     }
