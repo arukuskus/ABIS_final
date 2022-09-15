@@ -34,6 +34,10 @@ import { ReceiptListComponent } from './components/receipt-list/receipt-list.com
 import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
 import { ReceiptAddComponent } from './components/receipt-add/receipt-add.component';
 import { InstancesStore } from './services/instances.store';
+import { NzPaginationModule } from 'ng-zorro-antd/pagination';
+import { ModalModule } from 'ngx-modialog';
+import { BootstrapModalModule } from 'ngx-modialog/plugins/bootstrap';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 
 registerLocaleData(en);
 
@@ -67,7 +71,12 @@ registerLocaleData(en);
     NzInputModule,
     NzTabsModule,
     NzIconModule,
-    NzPageHeaderModule
+    NzPageHeaderModule,
+    NzPaginationModule,
+    NzDropDownModule
+
+    // ModalModule.forRoot(),
+    // BootstrapModalModule
     //AuthModule
   ],
   providers: [

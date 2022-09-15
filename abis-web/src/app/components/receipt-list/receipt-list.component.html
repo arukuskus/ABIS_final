@@ -2,25 +2,59 @@
   <!--Тут еще сверху нужно прописать путь как пользователь пришел к этой странице-->
   <nz-page-header nzTitle="Поступления"></nz-page-header>
   <button nz-button nzType="link" routerLink="/">Назад</button>
+
   <!--Будет открываться окно с формой поступления -->
   <button nz-button nzType="primary" routerLink="/receipts/receipt/add">Добавить поступление</button>
+  <button nz-button (click)="resetFilters()">Отчистить фильтры</button>
+  <button nz-button (click)="resetSortAndFilters()">Отчистить фильтры и сортировки</button>
 
   <!-- Табличка поступлений ng-zorro -->
     <div>
-      <nz-table [nzData]="(receipts$ | async) ?? []">
+      <nz-table 
+      #dynamicReceiptTable
+      nzShowPagination
+      nzShowSizeChanger
+      [nzData]="(receipts$ | async) ?? []"
+      [nzPageSize]="pageSize"
+      [nzTotal]="total">
         <thead>
           <tr>
-            <th>Название</th>
-            <th>Дата создания</th>
+            <th 
+            nzCustomFilter
+            [nzSortOrder]="listOfColumns[0].sortOrder"
+            [nzSortFn]="listOfColumns[0].sortFn"
+            [nzSortDirections]="listOfColumns[0].sortDirections">
+              Название
+
+              <!--Кастомный фильтр поиска по подстроке-->
+              <nz-filter-trigger [nzActive]="searchValue.length > 0" [nzDropdownMenu]="menu">
+                <span nz-icon nzType="search"></span>
+              </nz-filter-trigger>
+            </th>
+
+            <th>
+              Дата создания 
+            </th>
           </tr>
         </thead>
   
         <tbody>
-          <tr *ngFor="let receipt of receipts$ | async">
+          <tr *ngFor="let receipt of dynamicReceiptTable.data">
             <td> <a (click)="goTo(receipt.id)"> {{receipt.name}} </a></td>
             <td>{{receipt.createdDate | date:'medium'}}</td>
           </tr>
         </tbody>
       </nz-table>
+
+      <!--Всплывающее меню для кастомизированного фильтра-->
+      <nz-dropdown-menu #menu="nzDropdownMenu">
+        <div class="ant-table-filter-dropdown">
+          <div class="search-box">
+            <input type="text" nz-input placeholder="Search name" [(ngModel)]="searchValue" />
+            <button nz-button nzSize="small" nzType="primary" (click)="search()" class="search-button">Search</button>
+            <button nz-button nzSize="small" (click)="reset()">Reset</button>
+          </div>
+        </div>
+      </nz-dropdown-menu>
     </div>
 </div>

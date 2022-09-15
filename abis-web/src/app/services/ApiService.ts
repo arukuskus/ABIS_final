@@ -260,7 +260,7 @@ export class ApiClient {
 export class InstanceView implements IInstanceView {
     id!: string;
     receiptName?: string | undefined;
-    info?: string | undefined;
+    info!: string;
     recieptId?: string | undefined;
 
     constructor(data?: IInstanceView) {
@@ -307,7 +307,7 @@ export interface IInstanceView {
 
 export class ReceiptView implements IReceiptView {
     id!: string;
-    name?: string | undefined;
+    name!: string;
     createdDate!: Date;
 
     constructor(data?: IReceiptView) {
@@ -351,7 +351,7 @@ export interface IReceiptView {
 
 export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
     id!: string;
-    name?: string | undefined;
+    name!: string;
     createdDate!: Date;
     instances!: InstanceView[];
 

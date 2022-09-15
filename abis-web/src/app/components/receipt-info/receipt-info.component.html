@@ -106,27 +106,39 @@
         <nz-tab nzTitle="Издания">
 
           <!--Добавить издание-->
-          <button
+          <button 
             nz-button 
             nzType="primary"
-            [disabled]="isEditMode || isLoading"
+            [disabled]="isEditMode || isLoading || !(isWorkStatusOfReceiptIsEdit$ | async)"
             (click)="addRowInstance()"
             >
             Добавить издание
           </button>
 
            <!--Информация о книгах в режиме просмотра-->
-           <nz-table [nzData]="(instances$ | async)?? []">
+           <nz-table 
+            #dynamicInstanceTable
+            nzShowPagination
+            nzShowSizeChanger
+            [nzData]="(instances$ | async) ?? []"
+            [nzPageSize]="pageSize"
+            [nzPageIndex]="pageIndex"
+            >
             <thead>
               <tr>
                 <th>Номер</th>
-                <th>Информация об издании</th>
+                <th
+                [nzSortOrder]="listOfColumns[0].sortOrder"
+                [nzSortFn]="listOfColumns[0].sortFn"
+                [nzSortDirections]="listOfColumns[0].sortDirections">
+                Информация об издании
+              </th>
                 <th>Режим работы</th>
               </tr>
             </thead>
   
             <tbody>
-              <tr *ngFor="let instance of instances$ | async; index as i">
+              <tr *ngFor="let instance of dynamicInstanceTable.data; index as i">
                
                 <td>{{i}}</td>
 

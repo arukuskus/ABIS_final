@@ -10,7 +10,19 @@ import {
   InstancesStoreProvider
  } from 'src/app/services/instances.store';
 import { InstancesStoreService } from 'src/app/services/instances.store.service';
+import { NzTableFilterFn, NzTableFilterList, NzTableSortFn, NzTableSortOrder } from 'ng-zorro-antd/table';
 
+
+// Интерфейс для фильтров
+interface ColumnItem {
+  name: string; // к какой колонке фильтр применяется
+  sortOrder: NzTableSortOrder | null; // для сортировки столбца по умолчанию
+  sortFn: NzTableSortFn<InstanceView> | null; // результат сортировки
+  listOfFilter: NzTableFilterList; // это наверное список фильтров
+  filterFn: NzTableFilterFn<InstanceView> | null; // определяет отфильтрованый результата
+  filterMultiple: boolean; // указать является ли выбор множественным или одиночным
+  sortDirections: NzTableSortOrder[]; // это вроде значки сортировки
+}
 @UntilDestroy()
 @Component({
   selector: 'app-receipt-add',
@@ -20,6 +32,20 @@ import { InstancesStoreService } from 'src/app/services/instances.store.service'
   providers: [InstancesStoreProvider, InstancesStoreService]
 })
 export class ReceiptAddComponent implements OnInit {
+
+
+  // Список столбцов
+  listOfColumns: ColumnItem[] = [
+    {
+      name: 'Name',
+      sortOrder: null,
+      sortFn: (a: InstanceView, b: InstanceView) => a.info.localeCompare(b.info),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [],
+      filterFn: (list: string[], item: InstanceView) => list.some(name => item.info?.indexOf(name) !== -1)
+    },
+  ];
 
   // Реактивная форма для поступления
   receiptForm!: FormGroup;
@@ -45,14 +71,15 @@ export class ReceiptAddComponent implements OnInit {
   activeId$ = this.store.activeId$;
 
   isLoading: boolean = false;  //блокировка кнопок при загрузке данных в бд или ее отмене
-  isEditMode: boolean = false; //режим редактирования
 
-  // Режим работы для поступления и изданий
-  isWorkStatusOfReceiptIsEdit$ = new BehaviorSubject<boolean>(false);
+  // Режим работы с изданиями при добавлении
   isWorkStatusOfActiveInstanceIsEdit$ = new BehaviorSubject<boolean>(false);
 
-  // id поступления, записанное в маршрут
-  receiptIdFromUrl: string | undefined
+  // для управления таблицей
+  pageIndex: number = 1;
+  total: number = 2;
+  pageSize: number = 5;
+  loading = false;
 
   constructor(
     private fb: FormBuilder,
@@ -71,21 +98,16 @@ export class ReceiptAddComponent implements OnInit {
         this.isLoading =false;
       }
     });
-    this.instances$.subscribe((res) => console.log(`Данные изменились: `, res));
 
-    // следим зазаполнением активного id и состоянием кнопки
-    combineLatest([this.activeId$, this.isWorkStatusOfActiveInstanceIsEdit$]).subscribe(([activeId, isEditWorkStatus]) => {
-      if(isEditWorkStatus){
-        // ну получили активный элемент и режим редактировния, а как использовать?
-        // вызовем метод, который возвращает режим использования
-        this.isEditMode = true;
-      }else if(!isEditWorkStatus){
-        this.isEditMode = false;
+    this.instances$.subscribe(
+      (res) => {
+        console.log(`Данные изменились: `, res);
+        this.total = res.length;
       }
-    })
+    );
 
-      this.initReceiptForm();
-      this.initInstanceForm();
+    this.initReceiptForm();
+    this.initInstanceForm();
 
       // Следим за изменениями в форме поступлений
       this.receiptForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
@@ -134,6 +156,9 @@ export class ReceiptAddComponent implements OnInit {
 
   // Сохранить поступление
   saveReceipt() {
+
+    this.store.isSaveLoading$.next(true);
+
     // из формы поступления сохраним информацию в эльф
     this.receipt.id = Guid.newGuid().toString();
     this.receipt.createdDate = new Date(this.receiptForm.value.CreatedDate);
@@ -152,7 +177,9 @@ export class ReceiptAddComponent implements OnInit {
           }
         },
         error:()=>{},
-        complete:()=>{}
+        complete:()=>{
+          this.store.isSaveLoading$.next(false);
+        }
       }
     )
   }
@@ -205,26 +232,29 @@ export class ReceiptAddComponent implements OnInit {
       this.activeInstance$.subscribe(
         result => { 
           this.instanceActive.id = result?.id ?? '';
-          this.instanceActive.info = result?.info;
+          this.instanceActive.info = result?.info ?? '';
 
           // Заполняем реактивную форму
           this.instanceForm.setValue({Info: result?.info});
         }
       )
-
-      // отчищаем форму
-      this.instanceForm.setValue({Info: ''});
-
-      this.instanceActive = new InstanceView(); //отчищаем модель данных
-
-      this.store.resetActiveId(); // сбросить активный id
     }
+
+    // отчищаем форму
+    this.instanceForm.setValue({Info: ''});
+
+    this.instanceActive = new InstanceView(); //отчищаем модель данных
+
+    this.store.resetActiveId(); // сбросить активный id
   }
 
   // Удалить строку издания
   deleteInstance(id: string) {
     this.store.setActiveId(id); // определяем активный элемент
-    this.storeService.deleteInctance(id);
+    // пока без лишних изысков
+    if(confirm("Вы действительно хотите удалить этот элемент?")){
+      this.storeService.deleteInctance(id);
+    }
     this.store.resetActiveId(); // сбрасываем активный элемент
   }
 
@@ -236,7 +266,7 @@ export class ReceiptAddComponent implements OnInit {
     this.activeInstance$.subscribe(
       result => { 
         this.instanceActive.id = result?.id ?? '';
-        this.instanceActive.info = result?.info;
+        this.instanceActive.info = result?.info ?? '';
 
         // Заполняем реактивную форму
         this.instanceForm.setValue({Info: result?.info});
@@ -251,6 +281,17 @@ export class ReceiptAddComponent implements OnInit {
     const newRow = new InstanceView();
     this.storeService.addNewInstance(newRow);
     this.isWorkStatusOfActiveInstanceIsEdit$.next(true);
+    
+    this.pageIndex = this.total;
+  }
+
+  // Отменить создание поступления
+  CancelAddReceipt(){
+    // пока без лишних изысков
+    if(confirm("Вы действительно хотите отменить добавление")){
+      //возвращаемся на страницу поступлений
+      this.router.navigate(['receipts']);
+    }
   }
 
 }
