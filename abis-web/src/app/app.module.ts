@@ -9,16 +9,14 @@ import { UserPageComponent } from './components/user-page/user-page.component';
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { HttpClientModule} from "@angular/common/http";
 import { InitialAuthService } from "./services/auth-service/InitialAuthService"; // подключаем конфигурацию Oauth 2
-import { AuthModule } from './auth/auth.module';
-import { InstanceComponent } from './components/instance/instance.component';
-import { API_BASE_URL } from './services/ApiService';
+import { AuthModule } from './auth/auth.module'; // модуль авторизации
+import { API_BASE_URL } from './services/ApiService'; // путь к бэку
 import { registerLocaleData } from '@angular/common';
 import en from '@angular/common/locales/en';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { NZ_I18N } from 'ng-zorro-antd/i18n';
+import { NZ_I18N, ru_RU } from 'ng-zorro-antd/i18n';
 import { en_US } from 'ng-zorro-antd/i18n';
-import { IconsProviderModule } from './icons-provider.module';
-import { NzLayoutModule } from 'ng-zorro-antd/layout';
+import { NzLayoutModule } from 'ng-zorro-antd/layout'; // какой-то стилизованный дфнщге
 import { NzMenuModule } from 'ng-zorro-antd/menu'; // какая - то встроенная менюшка
 import { NzGridModule } from 'ng-zorro-antd/grid'; // Это сеточка
 import { NzTableModule } from 'ng-zorro-antd/table'; // Это табличка
@@ -27,17 +25,20 @@ import { NzInputModule } from 'ng-zorro-antd/input'; // Это инпуты
 import { NzFormModule } from 'ng-zorro-antd/form'; // Это формы
 import { NzTabsModule } from 'ng-zorro-antd/tabs'; // Это табы
 import { NzIconModule } from 'ng-zorro-antd/icon'; // Это значки
-import { InstancesComponent } from './components/instances/instances.component';
 import { ReceiptPageComponent } from './components/receipt-page/receipt-page.component';
 import { ReceiptInfoComponent } from './components/receipt-info/receipt-info.component';
 import { ReceiptListComponent } from './components/receipt-list/receipt-list.component';
 import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
 import { ReceiptAddComponent } from './components/receipt-add/receipt-add.component';
-import { InstancesStore } from './services/instances.store';
 import { NzPaginationModule } from 'ng-zorro-antd/pagination';
 import { ModalModule } from 'ngx-modialog';
 import { BootstrapModalModule } from 'ngx-modialog/plugins/bootstrap';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NgxSmartModalModule } from 'ngx-smart-modal';
+import { NgxSmartModalService } from 'ngx-smart-modal';
+import { NzUploadModule } from 'ng-zorro-antd/upload'; // тут загрузочку файлов подключаем
+import { NzMessageService } from 'ng-zorro-antd/message';
+import { FileWorkComponent } from './components/file-work/file-work.component';
 
 registerLocaleData(en);
 
@@ -47,12 +48,11 @@ registerLocaleData(en);
     AuthComponent,
     HomePageComponent,
     UserPageComponent,
-    InstanceComponent,
-    InstancesComponent,
     ReceiptPageComponent,
     ReceiptListComponent,
     ReceiptInfoComponent,
-    ReceiptAddComponent
+    ReceiptAddComponent,
+    FileWorkComponent
   ],
   imports: [
     NzFormModule,
@@ -62,7 +62,6 @@ registerLocaleData(en);
     FormsModule,
     ReactiveFormsModule,  // чтобы работали реактивные формы
     BrowserAnimationsModule,
-    IconsProviderModule,
     NzLayoutModule,
     NzMenuModule,
     NzGridModule,
@@ -73,19 +72,20 @@ registerLocaleData(en);
     NzIconModule,
     NzPageHeaderModule,
     NzPaginationModule,
-    NzDropDownModule
-
-    // ModalModule.forRoot(),
-    // BootstrapModalModule
-    //AuthModule
+    NzDropDownModule,
+    NgxSmartModalModule.forRoot(),
+    NzUploadModule,
+   
+    //AuthModule // раскомментировать, если понадобится доступ к приложению через keykloack
   ],
   providers: [
     {
       provide: API_BASE_URL,
       useValue: "https://localhost:7155"
     },
-    { provide: NZ_I18N, useValue: en_US }
-    //NzTableModule // чтобы можно было пользоваться где угодно
+    { provide: NZ_I18N, useValue: ru_RU }, // чтобы у ant.d был английский, а не японский)))
+    [NgxSmartModalService],
+    [ NzMessageService ]
 
   ],
   bootstrap: [AppComponent]

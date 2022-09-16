@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Guid } from 'guid-ts';
-import { BehaviorSubject, combineLatest } from 'rxjs';
+import { BehaviorSubject} from 'rxjs';
 import { InstanceView, ReceiptView } from 'src/app/services/ApiService';
 import { 
   InstancesStore,
@@ -11,6 +11,7 @@ import {
  } from 'src/app/services/instances.store';
 import { InstancesStoreService } from 'src/app/services/instances.store.service';
 import { NzTableFilterFn, NzTableFilterList, NzTableSortFn, NzTableSortOrder } from 'ng-zorro-antd/table';
+import { NgxSmartModalService } from 'ngx-smart-modal';
 
 
 // Интерфейс для фильтров
@@ -32,7 +33,6 @@ interface ColumnItem {
   providers: [InstancesStoreProvider, InstancesStoreService]
 })
 export class ReceiptAddComponent implements OnInit {
-
 
   // Список столбцов
   listOfColumns: ColumnItem[] = [
@@ -59,9 +59,6 @@ export class ReceiptAddComponent implements OnInit {
   receipt = new ReceiptView();
   instanceActive = new InstanceView();
 
-  isLoading$ = this.store.isSaveLoading$;  // спиннер загрузки
-  isLoadingDelete$ = new BehaviorSubject<boolean>(false);
-
   // Хранилище
   instances$ = this.store.instances$;
   receiptId$ = this.store.receiptId$;
@@ -83,10 +80,10 @@ export class ReceiptAddComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private route: ActivatedRoute,
     private router: Router,
     private store: InstancesStore, // хранилище данных
-    private storeService: InstancesStoreService // сервис для работы с хранилищем
+    private storeService: InstancesStoreService, // сервис для работы с хранилищем
+    public ngxSmartModalService: NgxSmartModalService
   ) { }
 
   ngOnInit(): void {
@@ -109,8 +106,8 @@ export class ReceiptAddComponent implements OnInit {
     this.initReceiptForm();
     this.initInstanceForm();
 
-      // Следим за изменениями в форме поступлений
-      this.receiptForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
+    // Следим за изменениями в форме поступлений
+    this.receiptForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
         switch(status) {
           case 'VALID':
             this.isFormValid$.next(true);
@@ -119,10 +116,10 @@ export class ReceiptAddComponent implements OnInit {
             this.isFormValid$.next(false);
           break;
         }
-      });
+    });
 
-      // Следим за изменениями в форме изданий
-      this.instanceForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
+    // Следим за изменениями в форме изданий
+    this.instanceForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
         switch(status) {
           case 'VALID':
             this.isInstanceFormValid$.next(true);
@@ -131,7 +128,7 @@ export class ReceiptAddComponent implements OnInit {
             this.isInstanceFormValid$.next(false);
             break;
         }
-      });
+    });
 
   }
 
@@ -166,7 +163,7 @@ export class ReceiptAddComponent implements OnInit {
 
     this.storeService.saveNewReceipt(this.receipt);
 
-    this.storeService.addNewReceipt().subscribe(
+    this.storeService.addNewReceipt().pipe(untilDestroyed(this)).subscribe(
       {
         next:(data)=>{
           if(data){
@@ -214,8 +211,6 @@ export class ReceiptAddComponent implements OnInit {
     this.store.resetActiveId(); // сбросить активный id
     // отчищаем форму
     this.instanceForm.setValue({Info: ''});
-
-    // где - то нужно заменить на patchValue при изменении одного элемента формы  
   }
 
   // Отмена изменений для изданий
@@ -242,19 +237,14 @@ export class ReceiptAddComponent implements OnInit {
 
     // отчищаем форму
     this.instanceForm.setValue({Info: ''});
-
     this.instanceActive = new InstanceView(); //отчищаем модель данных
-
     this.store.resetActiveId(); // сбросить активный id
   }
 
   // Удалить строку издания
   deleteInstance(id: string) {
     this.store.setActiveId(id); // определяем активный элемент
-    // пока без лишних изысков
-    if(confirm("Вы действительно хотите удалить этот элемент?")){
-      this.storeService.deleteInctance(id);
-    }
+    this.storeService.deleteInctance(id);
     this.store.resetActiveId(); // сбрасываем активный элемент
   }
 
@@ -287,11 +277,7 @@ export class ReceiptAddComponent implements OnInit {
 
   // Отменить создание поступления
   CancelAddReceipt(){
-    // пока без лишних изысков
-    if(confirm("Вы действительно хотите отменить добавление")){
-      //возвращаемся на страницу поступлений
-      this.router.navigate(['receipts']);
-    }
+    //возвращаемся на страницу поступлений
+    this.router.navigate(['receipts']);
   }
-
 }

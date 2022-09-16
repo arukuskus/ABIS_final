@@ -1,0 +1,21 @@
+<p>file-work works!</p>
+<!-- <nz-upload nzAction="http://localhost:4200/file"  (nzChange)="handleChange($event)">
+    <button nz-button>
+      <span nz-icon nzType="upload"></span>
+      Upload
+    </button>
+  </nz-upload> -->
+
+  <nz-upload
+  class="avatar-uploader"
+  nzAction="http://localhost:4200/file"
+  nzListType="picture-card"
+  [(nzFileList)]="fileList"
+  [nzShowButton]="fileList.length < 8"
+  [nzPreview]="handlePreview">
+  <ng-container *ngIf="!avatarUrl">
+    <span class="upload-icon" nz-icon [nzType]="loading ? 'loading' : 'plus'"></span>
+    <div class="ant-upload-text">Upload</div>
+  </ng-container>
+  <img *ngIf="avatarUrl" [src]="avatarUrl" style="width: 100%" />
+</nz-upload>

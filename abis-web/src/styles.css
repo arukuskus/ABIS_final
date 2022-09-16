@@ -1,1 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
+/* NgxSmartModal */
+@import "~ngx-smart-modal/ngx-smart-modal";
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,500,700');
+@import "app/app.component";

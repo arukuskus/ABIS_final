@@ -29,6 +29,7 @@
     "guid-ts": "^1.1.2",
     "ng-zorro-antd": "^13.4.0",
     "ngx-modialog": "^5.0.1",
+    "ngx-smart-modal": "^7.4.1",
     "rxjs": "~6.6.0",
     "tslib": "^2.1.0",
     "zone.js": "~0.11.4"

@@ -1,8 +1,7 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
+import { FileWorkComponent } from './components/file-work/file-work.component';
 import { HomePageComponent } from './components/home-page/home-page.component';
-import { InstanceComponent } from './components/instance/instance.component';
-import { InstancesComponent } from './components/instances/instances.component';
 import { ReceiptAddComponent } from './components/receipt-add/receipt-add.component';
 import { ReceiptInfoComponent } from './components/receipt-info/receipt-info.component';
 import { ReceiptListComponent } from './components/receipt-list/receipt-list.component';
@@ -23,20 +22,8 @@ const routes: Routes = [
       {path: 'receipt/add', component: ReceiptAddComponent, pathMatch: 'full'} // карточка добавления поступления
     ]
  },
-
-  { 
-    path: 'instance', 
-    component: InstanceComponent,
-    pathMatch: 'prefix',
-    children: [
-      { path: 'instances', component: InstancesComponent, pathMatch: 'full' },
-    ] 
-  },
-
-
-  { path: '**', component: HomePageComponent } // универсальный маршрут
-  //{ path: '', pathMatch: 'full', redirectTo: '/welcome' },
-  //{ path: 'welcome', loadChildren: () => import('./pages/welcome/welcome.module').then(m => m.WelcomeModule) }
+ { path:"file", component: FileWorkComponent }, //пока тестовый путь для компонента с файлами
+{ path: '**', component: HomePageComponent } // универсальный маршрут
 ];
 
 @NgModule({

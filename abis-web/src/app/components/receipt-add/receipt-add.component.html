@@ -14,7 +14,7 @@
       nz-button 
       nzType="primary" 
       [disabled]="!(isFormValid$ | async)"
-      [nzLoading]="isLoading$ | async"
+      [nzLoading]="isLoading"
       (click)="saveReceipt()">
       Сохранить
     </button>
@@ -23,8 +23,8 @@
       nz-button 
       nzType="primary"
       nzDanger
-      [disabled] = "isLoading$ | async"
-      (click)="CancelAddReceipt()">
+      [disabled] = "isLoading"
+      (click)="cancelAdd.open()">
       Отменить
     </button>
     
@@ -38,13 +38,13 @@
           <!--Наименование-->
           <nz-form-item>
               <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="Name">Название</nz-form-label>
-              <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="The input is not valid Name!">
+              <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Название невалидно!">
 
                 <input
                   nz-input 
                   type="text" 
                   id="Name" 
-                  placeholder="enter name"
+                  placeholder="введите название"
                   formControlName="Name" 
                   />
 
@@ -54,10 +54,10 @@
           <!--Дата создания-->
           <nz-form-item>
               <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="CreatedDate">Дата создания</nz-form-label>
-              <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Please input created date!">
+              <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Пожалуйста введите дату создания!">
 
                 <input 
-                  placeholder="enter created date"
+                  placeholder="введите дату создания"
                   nz-input
                   type="datetime-local"
                   nzSize="default" 
@@ -76,7 +76,7 @@
           <button
             nz-button 
             nzType="primary"
-            [disabled] = "(isLoading$ | async) || (isWorkStatusOfActiveInstanceIsEdit$ | async)"
+            [disabled] = "isLoading || (isWorkStatusOfActiveInstanceIsEdit$ | async)"
             (click)="addRowInstance()"
             >
             Добавить издание
@@ -89,7 +89,9 @@
            nzShowPagination
            [nzData]="(instances$ | async) ?? []"
            [nzPageSize]="pageSize"
-           [nzPageIndex]="pageIndex">
+           [nzPageIndex]="pageIndex"
+           [nzPageSizeOptions]="[5, 10, 100]"
+           [nzBordered]="true">
             <thead>
               <tr>
                 <th>Номер</th>
@@ -110,18 +112,18 @@
                 <td>{{i}}</td>
 
                  <!--Ячейка таблицы-->
-                <td *ngIf="instance.id != (activeId$ | async) || !(isWorkStatusOfActiveInstanceIsEdit$ | async)"> {{instance.info}} </td>
+                <td *ngIf="instance.id != (activeId$ | async)"> {{instance.info}} </td>
 
                 <!--Форма-->
-                <td *ngIf="(instance.id == (activeId$ | async) && (isWorkStatusOfActiveInstanceIsEdit$ | async)) || instance.info == null">
+                <td *ngIf="instance.id == (activeId$ | async)">
                   <form [formGroup]="instanceForm" nz-form>
                     <nz-form-item>
-                      <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Please input info!">
+                      <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Пожалуйста введите информацию!">
                         <input
                           nz-input 
                           type="text" 
                           id="Info"
-                          placeholder="enter info"
+                          placeholder="введите информацию"
                           formControlName="Info" 
                         />
                       </nz-form-control>
@@ -141,7 +143,7 @@
 
                 <!--Сохранить изменения (галочка)-->
                 <button 
-                  *ngIf="(isWorkStatusOfActiveInstanceIsEdit$ | async) && instance.id == (activeId$ | async)" 
+                  *ngIf="instance.id == (activeId$ | async)" 
                   nz-button 
                   nzType="link" 
                   (click)="saveChangesInstance(instance.id)"
@@ -151,7 +153,7 @@
 
                 <!--Отменить изменения-->
                 <button 
-                  *ngIf="(isWorkStatusOfActiveInstanceIsEdit$ | async) && instance.id == (activeId$ | async)" 
+                  *ngIf="instance.id == (activeId$ | async)" 
                   nz-button
                   nzType="link"
                   [disabled]="isLoading"
@@ -161,13 +163,27 @@
 
                 <!--Удалить издание-->
                 <button 
-                  *ngIf="instance.id != undefined && !(isWorkStatusOfActiveInstanceIsEdit$ | async)"
+                  *ngIf="instance.id != (activeId$ | async)"
                   nz-button 
                   nzType="link"
-                  (click)="deleteInstance(instance.id)"
+                  (click)="instanceDelModal.open()"
                   [disabled]="isLoading">
                   <span nz-icon nzType="delete" nzTheme="outline"></span>
                 </button>
+
+                 <!--Модальное окно для изданий-->
+                 <ngx-smart-modal #instanceDelModal identifier="instanceDelModal">
+                  <p>Вы уверенны что хотите удалить издание? {{instance.info}}</p>
+                  <button nz-button
+                    nzType="primary" nzDanger (click)="deleteInstance(instance.id)">
+                     Да
+                  </button>
+                  <button nz-button
+                    nzType="link" (click)="instanceDelModal.close()">
+                    Закрыть
+                  </button>
+                </ngx-smart-modal>
+
               </td>
               </tr>
             </tbody>
@@ -181,8 +197,20 @@
         <nz-tab nzTitle="История">
         </nz-tab>
 
-
       </nz-tabset>
     </div>
   </div>
+  
+  <!--Модальное окно для отмены действий-->
+<ngx-smart-modal #cancelAdd identifier="cancelAdd">
+  <p>Вы уверенны что хотите отменить все изменения?</p>
+  <button nz-button
+    nzType="primary" nzDanger (click)="CancelAddReceipt()">
+     Да
+  </button>
+  <button nz-button
+    nzType="link" (click)="cancelAdd.close()">
+    Закрыть
+  </button>
+</ngx-smart-modal>
 

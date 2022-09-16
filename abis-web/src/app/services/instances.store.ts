@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { createState, Store, propsArrayFactory, select, withProps, setProps, StoreDef } from "@ngneat/elf";
+import { createState, Store, select, withProps, setProps, StoreDef } from "@ngneat/elf";
 import { 
     setEntities, 
     selectAllEntities, 
@@ -9,17 +9,15 @@ import {
      selectActiveId,
      setActiveId,
      updateEntities,
-     selectEntity,
      addEntities,
      deleteEntities,
      resetActiveId,
      deleteAllEntities
     } from "@ngneat/elf-entities";
-import { selectRequestStatus } from "@ngneat/elf-requests";
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { map } from "rxjs/operators";
 
-import { InstanceView, ReceiptWithInstancesView } from "./ApiService";
+import { InstanceView } from "./ApiService";
 
 export interface Props {
   receiptId?: string;
@@ -34,14 +32,16 @@ const { state, config } = createState(
   withActiveId(), // храним айдишник сущности
 );
 
-
-//const store = new Store({ name: 'instances', state, config }); // так называемый репозиторий
-
 @Injectable()
 export class InstancesStore {
 
+  // загрузка данных
   isSaveLoading$ = new BehaviorSubject<boolean>(false);
   isCancleLoading$ = new BehaviorSubject<boolean>(false);
+
+  // Режим работы для поступления и изданий
+  isWorkStatusOfReceiptIsEdit$ = new BehaviorSubject<boolean>(false);
+  isWorkStatusOfActiveInstanceIsEdit$ = new BehaviorSubject<boolean>(false);
 
   // Если какая - либо из загрузок работает, блокируем кнопки
   isLoading = combineLatest([this.isSaveLoading$, this.isCancleLoading$]).pipe(
@@ -54,10 +54,22 @@ export class InstancesStore {
     })
   )
 
+  isEditWorkStatus = combineLatest([this.isWorkStatusOfActiveInstanceIsEdit$, this.isWorkStatusOfReceiptIsEdit$]).pipe(
+    map(([isEditInstance, isEditReceipt]) => {
+      if(isEditInstance || isEditReceipt){
+        return true;
+      }else {
+        return false;
+      }
+    })
+  )
+
+  // информация о поступлении
   receiptId$ = this.store.pipe(select((state) => state.receiptId));
   receiptName$ = this.store.pipe(select((state) => state.name));
   receiptDateCreated$ = this.store.pipe(select((state) => state.createdDate));
 
+  // хранилище изданий
   instances$ = this.store.pipe(selectAllEntities()); // возвращает observable
   activeInstance$ = this.store.pipe(selectActiveEntity()); // активное издание
   activeId$ = this.store.pipe(selectActiveId()); // активное id

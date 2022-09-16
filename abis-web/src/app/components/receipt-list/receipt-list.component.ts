@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs/operators';
-import { ApiClient, ReceiptView, ReceiptWithInstancesView } from 'src/app/services/ApiService';
+import { ApiClient, ReceiptView } from 'src/app/services/ApiService';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { BehaviorSubject } from 'rxjs';
 import { NzTableFilterFn, NzTableFilterList, NzTableSortFn, NzTableSortOrder } from 'ng-zorro-antd/table';

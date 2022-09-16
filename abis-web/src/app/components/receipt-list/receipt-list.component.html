@@ -5,8 +5,8 @@
 
   <!--Будет открываться окно с формой поступления -->
   <button nz-button nzType="primary" routerLink="/receipts/receipt/add">Добавить поступление</button>
-  <button nz-button (click)="resetFilters()">Отчистить фильтры</button>
-  <button nz-button (click)="resetSortAndFilters()">Отчистить фильтры и сортировки</button>
+  <button nz-button [disabled]="true" (click)="resetFilters()">Отчистить фильтры</button>
+  <button nz-button [disabled]="true" (click)="resetSortAndFilters()">Отчистить фильтры и сортировки</button>
 
   <!-- Табличка поступлений ng-zorro -->
     <div>
@@ -16,7 +16,9 @@
       nzShowSizeChanger
       [nzData]="(receipts$ | async) ?? []"
       [nzPageSize]="pageSize"
-      [nzTotal]="total">
+      [nzTotal]="total"
+      [nzPageSizeOptions]="[5, 10, 100]"
+      [nzBordered]="true">
         <thead>
           <tr>
             <th 
@@ -50,9 +52,9 @@
       <nz-dropdown-menu #menu="nzDropdownMenu">
         <div class="ant-table-filter-dropdown">
           <div class="search-box">
-            <input type="text" nz-input placeholder="Search name" [(ngModel)]="searchValue" />
-            <button nz-button nzSize="small" nzType="primary" (click)="search()" class="search-button">Search</button>
-            <button nz-button nzSize="small" (click)="reset()">Reset</button>
+            <input type="text" nz-input placeholder="Поле ввода" [(ngModel)]="searchValue" />
+            <button nz-button nzSize="small" nzType="primary" (click)="search()" class="search-button">Найти</button>
+            <button nz-button nzSize="small" (click)="reset()">Отменить</button>
           </div>
         </div>
       </nz-dropdown-menu>
