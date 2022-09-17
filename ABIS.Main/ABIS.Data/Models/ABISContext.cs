@@ -24,6 +24,11 @@ namespace ABIS.Data.Models
         public DbSet<Receipt> Receipts { get; set; } = null!;
 
         /// <summary>
+        /// Таюлица файлов
+        /// </summary>
+        public DbSet<File> Files { get; set; } = null!;
+
+        /// <summary>
         /// Контекст БД, в который передаются опции из конфигурации
         /// </summary>
         public ABISContext(DbContextOptions<ABISContext> options) : base(options) { }

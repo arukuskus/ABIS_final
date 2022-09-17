@@ -22,14 +22,16 @@ namespace ABIS.Data.Models
         /// <summary>
         /// К какому поступлению относится этот экземпляр
         /// </summary>
-        [Required]
         public string ReceiptName { get; set; }
 
         /// <summary>
         /// Краткая информация о книге
         /// </summary>
-        [Required]
         public string Info { get; set; }
+
+        /// <summary>
+        /// Зависимость издания от поступления
+        /// </summary>
 
         [ForeignKey(nameof(Receipt))]
         public Guid RecieptId { get; set; }

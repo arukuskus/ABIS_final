@@ -22,7 +22,6 @@ const routes: Routes = [
       {path: 'receipt/add', component: ReceiptAddComponent, pathMatch: 'full'} // карточка добавления поступления
     ]
  },
- { path:"file", component: FileWorkComponent }, //пока тестовый путь для компонента с файлами
 { path: '**', component: HomePageComponent } // универсальный маршрут
 ];
 

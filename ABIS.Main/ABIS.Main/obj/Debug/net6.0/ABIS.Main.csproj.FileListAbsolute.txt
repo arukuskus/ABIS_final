@@ -188,3 +188,7 @@ C:\Projects\ABIS_final\ABIS.Main\ABIS.Main\obj\Debug\net6.0\refint\ABIS.Main.dll
 C:\Projects\ABIS_final\ABIS.Main\ABIS.Main\obj\Debug\net6.0\ABIS.Main.pdb
 C:\Projects\ABIS_final\ABIS.Main\ABIS.Main\obj\Debug\net6.0\ABIS.Main.genruntimeconfig.cache
 C:\Projects\ABIS_final\ABIS.Main\ABIS.Main\obj\Debug\net6.0\ref\ABIS.Main.dll
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Main\bin\Debug\net6.0\System.Net.Http.Formatting.dll
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Main\bin\Debug\net6.0\System.Web.Http.dll
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Main\bin\Debug\net6.0\Newtonsoft.Json.dll
+C:\Projects\ABIS_final\ABIS.Main\ABIS.Main\bin\Debug\net6.0\Newtonsoft.Json.Bson.dll

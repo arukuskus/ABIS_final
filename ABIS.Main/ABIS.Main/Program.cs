@@ -1,4 +1,5 @@
 ﻿using ABIS.Data.Models;
+using ABIS.Main.Models;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,8 +11,8 @@ var services = builder.Services;
 services.AddMvcCore()
     .AddApiExplorer();
 
-//services.AddControllers(); // Вроде новее чем AddMvc
-
+// место расположения хранения файлов передается через опции конфигурации
+services.Configure<FileOptionsView>(options => configuration.GetSection("FileStore").Bind(options));
 services.AddDbContext<ABISContext>(options => { options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")); }); // Определяем контекст БД
 
 // Добавление swagger

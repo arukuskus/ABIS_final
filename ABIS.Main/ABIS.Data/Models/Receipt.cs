@@ -20,15 +20,16 @@ namespace ABIS.Data.Models
         /// <summary>
         /// Название поступления
         /// </summary>
-        [Required]
         public string Name { get; set; }
-
 
         /// <summary>
         /// Дата создания поступления 
         /// </summary>
         public DateTime CreatedDate { get; set; }
 
+        /// <summary>
+        /// У одного поступления может быть много изданий
+        /// </summary>
         public List<Instance> Instances { get; set; }
     }
 }

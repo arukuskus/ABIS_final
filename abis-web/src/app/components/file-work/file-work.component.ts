@@ -23,15 +23,11 @@ export class FileWorkComponent implements OnInit {
   constructor(private msg: NzMessageService) { }
 
   ngOnInit(): void {
+
   }
 
   previewImage: string | undefined = '';
   previewVisible = false;
-
-  beforeUpload = (file: NzUploadFile): boolean => {
-    this.fileList = this.fileList.concat(file);
-    return false;
-  };
 
   handlePreview = async (file: NzUploadFile): Promise<void> => {
     if (!file.url && !file.preview) {
@@ -41,4 +37,31 @@ export class FileWorkComponent implements OnInit {
     this.previewVisible = true;
   };
 
+  // событие для второй кнопочки загругки
+  handleChange(info: NzUploadChangeParam): void {
+    if (info.file.status !== 'uploading') {
+      console.log(info.file, info.fileList);
+    }
+    if (info.file.status === 'done') {
+      this.msg.success(`${info.file.name} file uploaded successfully`);
+    } else if (info.file.status === 'error') {
+      this.msg.error(`${info.file.name} file upload failed.`);
+    }
+  }
+
+  handleChange2(info: NzUploadChangeParam): void {
+    let fileList = [...info.fileList];
+
+    // 2. читать из ответа и показывать ссылку на файл
+    fileList = fileList.map(file => {
+      // в ответе ловим id c бэка
+      if (file.response) {
+        // Компонент покажет file.url как ссылку
+        file.uid = file.response;
+      }
+      return file;
+    });
+
+    this.fileList = fileList;
+  }
 }

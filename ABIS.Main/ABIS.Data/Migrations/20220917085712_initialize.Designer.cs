@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ABIS.Data.Migrations
 {
     [DbContext(typeof(ABISContext))]
-    [Migration("20220907042547_Test")]
-    partial class Test
+    [Migration("20220917085712_initialize")]
+    partial class initialize
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,6 +23,42 @@ namespace ABIS.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("ABIS.Data.Models.File", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Author")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DateTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Mime")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NameInFileSystem")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Size")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Files");
+                });
 
             modelBuilder.Entity("ABIS.Data.Models.Instance", b =>
                 {
@@ -34,9 +70,6 @@ namespace ABIS.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("ReceiptId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("ReceiptName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -46,7 +79,7 @@ namespace ABIS.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ReceiptId");
+                    b.HasIndex("RecieptId");
 
                     b.ToTable("Instances");
                 });
@@ -73,7 +106,7 @@ namespace ABIS.Data.Migrations
                 {
                     b.HasOne("ABIS.Data.Models.Receipt", "Receipt")
                         .WithMany("Instances")
-                        .HasForeignKey("ReceiptId")
+                        .HasForeignKey("RecieptId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
