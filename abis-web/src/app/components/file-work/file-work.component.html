@@ -1,29 +1,54 @@
 <p>file-work works!</p>
 
-<!-- [nzPreview]="handlePreview" -->
+<!--Отображаем список файлов, если режим просмотра-->
+<div *ngIf="!isEditMode">
+  <!-- <nz-upload [nzFileList]="fileList"></nz-upload> -->
+  <!--Загрузчик с изображением-->
   <nz-upload
-  class="avatar-uploader"
-  nzAction="https://localhost:7155/file/save/store"
-  nzListType="picture-card"
-  [nzFileList]="fileList"
-  [nzShowButton]="fileList.length < 8"
-  (nzChange)="handleChange2($event)">
+    class="avatar-uploader"
+    nzListType="picture-card"
+    [nzFileList]="fileListForReceipt"
+    [nzPreview]="handlePreview">
+      <div>
+        <span nz-icon nzType="plus"></span>
+        <div style="margin-top: 8px">Upload</div>
+      </div>
 
-  <ng-container *ngIf="!avatarUrl">
-    <span class="upload-icon" nz-icon [nzType]="loading ? 'loading' : 'plus'"></span>
-    <div class="ant-upload-text">Upload</div>
-  </ng-container>
-  <img *ngIf="avatarUrl" [src]="avatarUrl" style="width: 100%" />
+      <nz-modal
+        [nzVisible]="previewVisible"
+        [nzContent]="modalContent"
+        [nzFooter]="null"
+        (nzOnCancel)="previewVisible = false"
+      >
+      <ng-template #modalContent>
+        <img [src]="previewImage" [ngStyle]="{ width: '100%' }" />
+      </ng-template>
+    </nz-modal>
 </nz-upload>
+</div>
+
+<!--Отображаем кнопочки загрузки, если режим редактирования-->
+<div *ngIf="isEditMode">
 
 <!--Вторая кнопочка загрузки-->
 <nz-upload
-      nzAction="https://localhost:7155/file/save/store"
-      [nzHeaders]="{ authorization: 'authorization-text' }"
-      (nzChange)="handleChange($event)"
-    >
-      <button nz-button>
-        <span nz-icon nzType="upload"></span>
-        Click to Upload
-      </button>
-    </nz-upload>
+  [(nzFileList)]="fileList"
+  [nzBeforeUpload]="beforeUpload">
+  <button nz-button>
+    <span nz-icon nzType="upload"></span>
+    Click to Upload
+  </button>
+</nz-upload>
+
+<!--Кнопка, которая запускает запрос к серверу на загрузку файлов на сервер-->
+<button
+    nz-button
+    [nzType]="'primary'"
+    [nzLoading]="uploading$ | async"
+    (click)=" handleUpload()"
+    [disabled]="fileList.length === 0"
+    style="margin-top: 16px"
+  >
+    Start Upload
+  </button>
+</div>

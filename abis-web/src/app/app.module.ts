@@ -39,6 +39,7 @@ import { NgxSmartModalService } from 'ngx-smart-modal';
 import { NzUploadModule } from 'ng-zorro-antd/upload'; // тут загрузочку файлов подключаем
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { FileWorkComponent } from './components/file-work/file-work.component';
+import { NzModalModule } from 'ng-zorro-antd/modal';
 
 registerLocaleData(en);
 
@@ -75,6 +76,7 @@ registerLocaleData(en);
     NzDropDownModule,
     NgxSmartModalModule.forRoot(),
     NzUploadModule,
+    NzModalModule
    
     //AuthModule // раскомментировать, если понадобится доступ к приложению через keykloack
   ],

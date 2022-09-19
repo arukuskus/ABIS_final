@@ -14,6 +14,8 @@ import { NzTableFilterFn, NzTableFilterList, NzTableSortFn, NzTableSortOrder } f
 import { NgxSmartModalService } from 'ngx-smart-modal';
 // для файликов
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzUploadFile } from 'ng-zorro-antd/upload';
+import { FileService } from 'src/app/services/file-service/file.service';
 
 // Интерфейс для фильтров
 interface ColumnItem {
@@ -86,6 +88,7 @@ export class ReceiptInfoComponent implements OnInit {
   pageSize: number = 5;
   loading = false;
 
+  fileListForReceipt$ = this.fileService.fileListForReceipt$; // список файлов, закрепленного за посступлением
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -93,7 +96,7 @@ export class ReceiptInfoComponent implements OnInit {
     private store: InstancesStore, // хранилище данных
     private storeService: InstancesStoreService, // сервис для работы с хранилищем
     public ngxSmartModalService: NgxSmartModalService,
-    private msg: NzMessageService
+    private fileService: FileService
   ) { }
 
   ngOnInit(): void {
@@ -190,7 +193,8 @@ export class ReceiptInfoComponent implements OnInit {
            Name: result.name,
            CreatedDate: this.convertDateTime(result.createdDate)
         });
-      }});
+      }
+    });
   }
 
   // Сохранить издание/Добавить издание

@@ -143,238 +143,10 @@ export class ApiClient {
     }
 
     /**
-     * @return Success
-     */
-    instances(): Observable<InstanceView[]> {
-        let url_ = this.baseUrl + "/api/instances";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ : any = {
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Accept": "text/plain"
-            })
-        };
-
-        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processInstances(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processInstances(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<InstanceView[]>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<InstanceView[]>;
-        }));
-    }
-
-    protected processInstances(response: HttpResponseBase): Observable<InstanceView[]> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(InstanceView.fromJS(item));
-            }
-            else {
-                result200 = <any>null;
-            }
-            return _observableOf(result200);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    /**
      * @param body (optional) 
      * @return Success
      */
-    instance(body: InstanceView | undefined): Observable<boolean> {
-        let url_ = this.baseUrl + "/api/add/instance";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_ : any = {
-            body: content_,
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Content-Type": "application/json",
-                "Accept": "text/plain"
-            })
-        };
-
-        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processInstance(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processInstance(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<boolean>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<boolean>;
-        }));
-    }
-
-    protected processInstance(response: HttpResponseBase): Observable<boolean> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
-            return _observableOf(result200);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    /**
-     * @param body (optional) 
-     * @return Success
-     */
-    instance2(body: InstanceView | undefined): Observable<InstanceView> {
-        let url_ = this.baseUrl + "/api/save/instance";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_ : any = {
-            body: content_,
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Content-Type": "application/json",
-                "Accept": "text/plain"
-            })
-        };
-
-        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processInstance2(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processInstance2(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<InstanceView>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<InstanceView>;
-        }));
-    }
-
-    protected processInstance2(response: HttpResponseBase): Observable<InstanceView> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = InstanceView.fromJS(resultData200);
-            return _observableOf(result200);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    /**
-     * @param body (optional) 
-     * @return Success
-     */
-    instance3(body: string | undefined): Observable<boolean> {
-        let url_ = this.baseUrl + "/api/delete/instance";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_ : any = {
-            body: content_,
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Content-Type": "application/json",
-                "Accept": "text/plain"
-            })
-        };
-
-        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processInstance3(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processInstance3(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<boolean>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<boolean>;
-        }));
-    }
-
-    protected processInstance3(response: HttpResponseBase): Observable<boolean> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
-            return _observableOf(result200);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    /**
-     * @param body (optional) 
-     * @return Success
-     */
-    receiptPOST(body: ReceiptView | undefined): Observable<ReceiptView> {
+    receiptPOST(body: ReceiptWithInstancesView | undefined): Observable<boolean> {
         let url_ = this.baseUrl + "/api/save/receipt";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -397,14 +169,14 @@ export class ApiClient {
                 try {
                     return this.processReceiptPOST(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ReceiptView>;
+                    return _observableThrow(e) as any as Observable<boolean>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ReceiptView>;
+                return _observableThrow(response_) as any as Observable<boolean>;
         }));
     }
 
-    protected processReceiptPOST(response: HttpResponseBase): Observable<ReceiptView> {
+    protected processReceiptPOST(response: HttpResponseBase): Observable<boolean> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -415,7 +187,65 @@ export class ApiClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ReceiptView.fromJS(resultData200);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    receiptPOST2(body: ReceiptWithInstancesView | undefined): Observable<boolean> {
+        let url_ = this.baseUrl + "/api/add/receipt";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processReceiptPOST2(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processReceiptPOST2(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<boolean>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<boolean>;
+        }));
+    }
+
+    protected processReceiptPOST2(response: HttpResponseBase): Observable<boolean> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -430,7 +260,7 @@ export class ApiClient {
 export class InstanceView implements IInstanceView {
     id!: string;
     receiptName?: string | undefined;
-    info?: string | undefined;
+    info!: string;
     recieptId?: string | undefined;
 
     constructor(data?: IInstanceView) {
@@ -477,7 +307,7 @@ export interface IInstanceView {
 
 export class ReceiptView implements IReceiptView {
     id!: string;
-    name?: string | undefined;
+    name!: string;
     createdDate!: Date;
 
     constructor(data?: IReceiptView) {
@@ -521,7 +351,7 @@ export interface IReceiptView {
 
 export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
     id!: string;
-    name?: string | undefined;
+    name!: string;
     createdDate!: Date;
     instances!: InstanceView[];
 

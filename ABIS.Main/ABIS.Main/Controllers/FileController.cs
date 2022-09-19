@@ -86,11 +86,12 @@ namespace ABIS.Main.Controllers
             return id;
         }
 
+
         /// <summary>
         /// Вытаскивает из бд информацию о файле по id и возвращает его пользователю на скачку
         /// </summary>
         [HttpGet]
-        [Route("file")]
+        [Route("get")]
         public async Task<bool> GetFile(Guid id, CancellationToken cancellationToken)
         {
             return true;

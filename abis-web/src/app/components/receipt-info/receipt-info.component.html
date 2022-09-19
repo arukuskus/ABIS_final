@@ -223,7 +223,11 @@
         </nz-tab>
 
         <nz-tab nzTitle="Файлы">
-          <app-file-work></app-file-work>
+          <app-file-work
+          [isEditMode]="isEditMode"
+          [fileListForReceipt]="(fileListForReceipt$ | async) ?? []"
+          >
+          </app-file-work>
         </nz-tab>
 
         <nz-tab nzTitle="История">
