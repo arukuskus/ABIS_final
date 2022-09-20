@@ -113,7 +113,7 @@
             Добавить издание
           </button>
 
-           <!--Информация о книгах в режиме просмотра-->
+           <!--Информация о изданиях в режиме просмотра-->
            <nz-table 
             #dynamicInstanceTable
             nzShowPagination
@@ -223,11 +223,121 @@
         </nz-tab>
 
         <nz-tab nzTitle="Файлы">
-          <app-file-work
-          [isEditMode]="isEditMode"
-          [fileListForReceipt]="(fileListForReceipt$ | async) ?? []"
-          >
-          </app-file-work>
+          <!--Кнопка загрузки файда-->
+          <div *ngIf="isEditMode">
+            <app-file-work>
+            </app-file-work>
+          </div>
+
+          <!--Таблица с файлами-->
+            <nz-table 
+            #FilesTable
+            nzShowPagination
+            nzShowSizeChanger
+            [nzData]="(files$ | async) ?? []"
+            [nzPageSize]="5"
+            [nzPageSizeOptions]="[5, 10, 100]"
+            [nzBordered]="true">
+
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Дата создания</th>
+                <th>Тип файла</th>
+                <th>Файл</th>
+                <th>Режим работы</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let file of FilesTable.data">
+               
+                <!--Название файла-->
+                <td *ngIf="file.id != (activeId$ | async)">{{file.name}}</td>
+                <td *ngIf="file.id == (activeId$ | async)">
+                  <form [formGroup]="fileForm" nz-form>
+                    <nz-form-item>
+                      <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Пожалуйста введите наименование!">
+                        <input
+                          nz-input 
+                          type="text"
+                          placeholder="введите название"
+                          formControlName="Name" 
+                        />
+                      </nz-form-control>
+                    </nz-form-item>
+                  </form>
+                </td>
+
+                 <!--Дата создания файла-->
+                <td *ngIf="file.id != (activeId$ | async)"> {{file.createdDate}} </td>
+                <td *ngIf="file.id == (activeId$ | async)">
+                  <form [formGroup]="fileForm" nz-form>
+                    <nz-form-item>
+                      <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Пожалуйста введите дату!">
+                        <input
+                          nz-input 
+                          type="datetime-local"
+                          placeholder="введите дату"
+                          formControlName="CreatedDate" 
+                        />
+                      </nz-form-control>
+                    </nz-form-item>
+                  </form>
+                </td>
+
+                <!--Тип файла-->
+                <td>{{file.mime}}</td>
+
+                <!--Ссылка на скачивание файла-->
+                <!-- href="https://localhost:7155/file/download?id=2715a202-1ebc-48e8-82fb-bd7e55956292" -->
+                <td *ngIf="file.id != (activeId$ | async)" ><a (click)="download(file.id)" href="https://localhost:7155/file/download?id={{file.id}}"> {{file.fileName}} </a></td>
+                <td *ngIf="file.id == (activeId$ | async)">{{file.fileName}}</td>
+
+                <!--Режим работы (кнопочки)-->
+                <td>
+                  <!--Режим редактирования (карандашик)-->
+                  <button
+                    nz-button
+                    nzType="link"
+                    (click)="editModeFile(file.id)"
+                    [disabled]="isLoading || (isWorkStatucOfActiveFileIsEdit$ | async) || !isEditMode">
+                    <span nz-icon nzType="edit" nzTheme="outline"></span>
+                  </button>
+
+                  <!--Сохранить изменения (галочка)-->
+                  <button 
+                    *ngIf="isEditMode && file.id == (activeId$ | async)" 
+                    nz-button 
+                    nzType="link" 
+                    (click)="saveChangesFile(file.id)"
+                    [disabled]="!(isFileFormValid$ | async) || isLoading">
+                    <span nz-icon nzType="check" nzTheme="outline"></span>
+                  </button>
+
+                  <!--Отменить изменения-->
+                  <button 
+                    *ngIf="isEditMode && file.id == (activeId$ | async)" 
+                    nz-button
+                    nzType="link"
+                    [disabled]="isLoading"
+                    (click)="stopChangesFile(file.id)">
+                    <span nz-icon nzType="close" nzTheme="outline"></span>
+                  </button>
+
+                  <!--Удалить издание-->
+                  <button 
+                    *ngIf="file.id != (activeId$ | async)"
+                    nz-button 
+                    nzType="link"
+                    (click)="deleteFile(file.id)"
+                    [disabled]="isLoading || (isWorkStatucOfActiveFileIsEdit$ | async) || !isEditMode">
+                    <span nz-icon nzType="delete" nzTheme="outline"></span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
         </nz-tab>
 
         <nz-tab nzTitle="История">
@@ -238,6 +348,8 @@
     </div>
   </div>
 
+  <div>{{activeFiles$ | async | json}}</div>
+  <div>{{activeInstance$ | async | json}}</div>
 <!--Модальное окно для отмены действий-->
 <ngx-smart-modal #cancelChanges identifier="cancelChanges">
   <p>Вы уверенны что хотите отменить все изменения?</p>

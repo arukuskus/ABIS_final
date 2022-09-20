@@ -31,5 +31,10 @@ namespace ABIS.Data.Models
         /// У одного поступления может быть много изданий
         /// </summary>
         public List<Instance> Instances { get; set; }
+
+        /// <summary>
+        /// У одного поступления может быть много файлов
+        /// </summary>
+        public List<FilesForReceipts> Files { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { tap } from 'rxjs/operators';
-import { ApiClient, InstanceView, ReceiptView, ReceiptWithInstancesView } from './ApiService';
+import { ApiClient, FilesForReceiptsView, InstanceView, ReceiptView, ReceiptWithFullInfo } from './ApiService';
 import { InstancesStore } from './instances.store';
 
 @Injectable({
@@ -14,6 +14,7 @@ export class InstancesStoreService {
     private readonly _apiService: ApiClient
   ) {}
 
+  //----------------------------------------Все для изданий---------------------------------------
   //удалить издание
   deleteInctance(id:string){
     this._store.deleteInstance(id);
@@ -28,6 +29,20 @@ export class InstancesStoreService {
    saveNewInstance(newInstance: InstanceView){
     this._store.setInstance(newInstance, newInstance.id);
   }
+  //-------------------------------------------------------------------------------------------------
+  //-----------------------------------------Все для файлов------------------------------------------
+  deleteFile(id:string){
+    this._store.deleteFile(id);
+  }
+
+  addNeFile(newFile: FilesForReceiptsView){
+    this._store.addFile(newFile);
+  }
+
+  saveFile(file: FilesForReceiptsView){
+    this._store.setFile(file, file.id);
+  }
+  //-------------------------------------------------------------------------------------------------
 
   // Сохраним инфо об измененном поступлении
   saveNewReceipt(newReceipt: ReceiptView){
@@ -35,12 +50,13 @@ export class InstancesStoreService {
   }
 
   // Получить издания и поступление с бэка
-  getInstances(id: string | undefined) {
+  getAllInfoFromReceipt(id: string | undefined) {
     return this._apiService.receiptGET(id).pipe(
         tap((data) => {
             // тут же сохраним данные в эльф
             this._store.setInstances(data.instances);
             this._store.setNewProps(data.id, data.name, data.createdDate);
+            this._store.setFiles(data.files);
         })
     );
   }
@@ -48,13 +64,14 @@ export class InstancesStoreService {
   // Сохранить изменения в карточке поступлений
   saveChangeOfReceipt(){
 
-    const newReceipt = new ReceiptWithInstancesView();
+    const newReceipt = new ReceiptWithFullInfo();
     // вообще, слишком много subscribe и надо с этим что - то делать для сохранения логики
     this._store.receiptId$.subscribe(data=>{newReceipt.id = data??''});
     this._store.receiptDateCreated$.subscribe(data=>{newReceipt.createdDate = data});
     this._store.receiptName$.subscribe(data=>{newReceipt.name = data});
 
-    this._store.instances$.subscribe(data=>{newReceipt.instances = data})
+    this._store.instances$.subscribe(data=>{newReceipt.instances = data});
+    this._store.files$.subscribe(data=>{newReceipt.files = data});
 
     // ожидаем true или false
     return this._apiService.receiptPOST(newReceipt).pipe();
@@ -62,12 +79,13 @@ export class InstancesStoreService {
 
   // Добавить поступление на бэк
   addNewReceipt(){
-    const newReceipt = new ReceiptWithInstancesView();
+    const newReceipt = new ReceiptWithFullInfo();
     this._store.receiptId$.subscribe(data=>{newReceipt.id = data??''});
     this._store.receiptDateCreated$.subscribe(data=>{newReceipt.createdDate = data});
     this._store.receiptName$.subscribe(data=>{newReceipt.name = data});
 
     this._store.instances$.subscribe(data=>{newReceipt.instances = data});
+    this._store.files$.subscribe(data=>{newReceipt.files = data});
 
     return this._apiService.receiptPOST2(newReceipt).pipe();
   }

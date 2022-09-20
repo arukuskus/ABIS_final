@@ -10,6 +10,5 @@
         /// </summary>
         public string fileStore { get; set; }
 
-
     }
 }

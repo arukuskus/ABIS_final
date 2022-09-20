@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ABIS.Data.Migrations
 {
     [DbContext(typeof(ABISContext))]
-    [Migration("20220917085712_initialize")]
+    [Migration("20220920024924_initialize")]
     partial class initialize
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -52,12 +52,43 @@ namespace ABIS.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Size")
-                        .HasColumnType("integer");
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
                     b.ToTable("Files");
+                });
+
+            modelBuilder.Entity("ABIS.Data.Models.FilesForReceipts", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Mime")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("RecieptId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecieptId");
+
+                    b.ToTable("FilesForReceipts");
                 });
 
             modelBuilder.Entity("ABIS.Data.Models.Instance", b =>
@@ -67,10 +98,6 @@ namespace ABIS.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Info")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ReceiptName")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -102,6 +129,17 @@ namespace ABIS.Data.Migrations
                     b.ToTable("Receipts");
                 });
 
+            modelBuilder.Entity("ABIS.Data.Models.FilesForReceipts", b =>
+                {
+                    b.HasOne("ABIS.Data.Models.Receipt", "Receipt")
+                        .WithMany("Files")
+                        .HasForeignKey("RecieptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Receipt");
+                });
+
             modelBuilder.Entity("ABIS.Data.Models.Instance", b =>
                 {
                     b.HasOne("ABIS.Data.Models.Receipt", "Receipt")
@@ -115,6 +153,8 @@ namespace ABIS.Data.Migrations
 
             modelBuilder.Entity("ABIS.Data.Models.Receipt", b =>
                 {
+                    b.Navigation("Files");
+
                     b.Navigation("Instances");
                 });
 #pragma warning restore 612, 618

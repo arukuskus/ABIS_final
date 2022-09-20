@@ -1,9 +1,9 @@
 import { Injectable } from "@angular/core";
-import { createState, Store, select, withProps, setProps, StoreDef } from "@ngneat/elf";
+import { createState, Store, select, withProps, setProps, StoreDef, createStore } from "@ngneat/elf";
 import { 
-    setEntities, 
-    selectAllEntities, 
-    withActiveId,
+     setEntities, 
+     selectAllEntities, 
+     withActiveId,
      withEntities, 
      selectActiveEntity,
      selectActiveId,
@@ -12,12 +12,18 @@ import {
      addEntities,
      deleteEntities,
      resetActiveId,
-     deleteAllEntities
+     deleteAllEntities,
+     withUIEntities,
+     UIEntitiesRef,
+     entitiesPropsFactory
     } from "@ngneat/elf-entities";
 import { BehaviorSubject, combineLatest } from "rxjs";
 import { map } from "rxjs/operators";
 
-import { InstanceView } from "./ApiService";
+import { FilesForReceiptsView, InstanceView } from "./ApiService";
+
+// шо то непонятное
+//const { fileEntitiesRef, withFileEntities } = entitiesPropsFactory('files');
 
 export interface Props {
   receiptId?: string;
@@ -28,9 +34,18 @@ export interface Props {
 // Возвращаем состояние и конфигурацию, которые используются при создании хранилища
 const { state, config } = createState(
   withProps<Props>({receiptId: '', name: '', createdDate: new Date()}),
-  withEntities<InstanceView>(), // сущность, которая будет храниться в эльфе
+  withUIEntities<FilesForReceiptsView>(),
+  withEntities<InstanceView>(),
+  //withFileEntities<FilesForReceiptsView>(),
   withActiveId(), // храним айдишник сущности
 );
+
+// const store = createStore(
+//   { name: 'instances-repository' }, 
+//   withEntities<InstanceView>(),
+//   withFileEntities<FilesForReceiptsView>(),
+//   withActiveId(), 
+//   );
 
 @Injectable()
 export class InstancesStore {
@@ -72,20 +87,34 @@ export class InstancesStore {
   // хранилище изданий
   instances$ = this.store.pipe(selectAllEntities()); // возвращает observable
   activeInstance$ = this.store.pipe(selectActiveEntity()); // активное издание
-  activeId$ = this.store.pipe(selectActiveId()); // активное id
 
+  // хранилище файлов
+  files$ = this.store.pipe(selectAllEntities({ ref: UIEntitiesRef }));
+  activeFiles$ = this.store.pipe(selectActiveEntity({ ref: UIEntitiesRef }));
+  
   constructor(readonly store: Store<StoreDef<typeof state>>){}
 
-  // отчистить храилище от всех сущностей
-  deleteEntities(){
-    this.store.update(deleteAllEntities());
+  // активное id
+  activeId$ = this.store.pipe(selectActiveId());
+  // обновление id
+  setActiveId(id: string) {
+    this.store.update(setActiveId(id));
   }
-
   // сбросить активный id
   resetActiveId(){
     this.store.update(resetActiveId());
   }
 
+  // обновление свойств репозитория
+  setNewProps(id: string, name: string | undefined, date: Date){
+    this.store.update(setProps((state) => ({
+      receiptId: id,
+      name: name,
+      createdDate: date,
+    })));
+  }
+
+  //------------------------------------------------Все для изданий------------------------------
   // удалить издание
   deleteInstance(id: string){
     this.store.update(deleteEntities(id));
@@ -101,24 +130,43 @@ export class InstancesStore {
     this.store.update(updateEntities(id, entity => instance));
   }
 
-  // обновление id
-  setActiveId(id: string) {
-    this.store.update(setActiveId(id));
-  }
-
   // обновление репозитория
   setInstances(instances: InstanceView[]){
     this.store.update(setEntities(instances));
   }
 
-  // обновление свойств репозитория
-  setNewProps(id: string, name: string | undefined, date: Date){
-    this.store.update(setProps((state) => ({
-      receiptId: id,
-      name: name,
-      createdDate: date
-    })));
+  // отчистить хранилище от всех изданий
+  deleteEntities(){
+    this.store.update(deleteAllEntities());
   }
+  //-----------------------------------------------------------------------------------------------
+ 
+  //-------------------------------------------------Все для файлов--------------------------------
+   // удалить файл
+    deleteFile(id: string){
+     this.store.update(deleteEntities(id, { ref: UIEntitiesRef }));
+   }
+   // обновление файл по id
+    setFile(file: FilesForReceiptsView, id: string){
+    this.store.update(updateEntities(id, entity => file, { ref: UIEntitiesRef }));
+  }
+
+    // добавление нового файла
+    addFile(file: FilesForReceiptsView){
+     this.store.update(addEntities(file, { ref: UIEntitiesRef }));
+   }
+
+   // обновление репозитория
+   setFiles(files: FilesForReceiptsView[]){
+     this.store.update(setEntities(files, { ref: UIEntitiesRef }));
+   }
+
+   // отчистить хранилище от файлов
+    deleteFileEntities(){
+    this.store.update(deleteAllEntities({ ref: UIEntitiesRef }));
+  }
+  //-----------------------------------------------------------------------------------------------
+  
 }
 
 export const InstancesStoreProvider = {

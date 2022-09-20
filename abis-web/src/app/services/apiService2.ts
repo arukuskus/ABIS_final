@@ -15,10 +15,8 @@ import { HttpClient, HttpHeaders, HttpResponse, HttpResponseBase } from '@angula
 
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
-@Injectable({
-    providedIn: 'root'
-  })
-export class ApiClient {
+@Injectable()
+export class Client {
     private http: HttpClient;
     private baseUrl: string;
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
@@ -90,7 +88,7 @@ export class ApiClient {
      * @param id (optional) 
      * @return Success
      */
-    receiptGET(id: string | undefined): Observable<ReceiptWithInstancesView> {
+    receiptGET(id: string | undefined): Observable<ReceiptWithFullInfo> {
         let url_ = this.baseUrl + "/api/receipt?";
         if (id === null)
             throw new Error("The parameter 'id' cannot be null.");
@@ -113,14 +111,14 @@ export class ApiClient {
                 try {
                     return this.processReceiptGET(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ReceiptWithInstancesView>;
+                    return _observableThrow(e) as any as Observable<ReceiptWithFullInfo>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ReceiptWithInstancesView>;
+                return _observableThrow(response_) as any as Observable<ReceiptWithFullInfo>;
         }));
     }
 
-    protected processReceiptGET(response: HttpResponseBase): Observable<ReceiptWithInstancesView> {
+    protected processReceiptGET(response: HttpResponseBase): Observable<ReceiptWithFullInfo> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -131,7 +129,7 @@ export class ApiClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ReceiptWithInstancesView.fromJS(resultData200);
+            result200 = ReceiptWithFullInfo.fromJS(resultData200);
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -146,7 +144,7 @@ export class ApiClient {
      * @param body (optional) 
      * @return Success
      */
-    receiptPOST(body: ReceiptWithInstancesView | undefined): Observable<boolean> {
+    receiptPOST(body: ReceiptWithFullInfo | undefined): Observable<boolean> {
         let url_ = this.baseUrl + "/api/save/receipt";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -203,7 +201,7 @@ export class ApiClient {
      * @param body (optional) 
      * @return Success
      */
-    receiptPOST2(body: ReceiptWithInstancesView | undefined): Observable<boolean> {
+    receiptPOST2(body: ReceiptWithFullInfo | undefined): Observable<boolean> {
         let url_ = this.baseUrl + "/api/add/receipt";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -255,12 +253,175 @@ export class ApiClient {
         }
         return _observableOf(null as any);
     }
+
+    /**
+     * @param file (optional) 
+     * @return Success
+     */
+    store(file: FileParameter | undefined): Observable<string> {
+        let url_ = this.baseUrl + "/file/save/store";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = new FormData();
+        if (file === null || file === undefined)
+            throw new Error("The parameter 'file' cannot be null.");
+        else
+            content_.append("file", file.data, file.fileName ? file.fileName : "file");
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "text/plain"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processStore(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processStore(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<string>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<string>;
+        }));
+    }
+
+    protected processStore(response: HttpResponseBase): Observable<string> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    download(body: string | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/file/download";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processDownload(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processDownload(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processDownload(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
+export class FilesForReceiptsView implements IFilesForReceiptsView {
+    id?: string;
+    name?: string | undefined;
+    createdDate?: Date;
+    mime?: string | undefined;
+    fileName?: string | undefined;
+
+    constructor(data?: IFilesForReceiptsView) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : <any>undefined;
+            this.mime = _data["mime"];
+            this.fileName = _data["fileName"];
+        }
+    }
+
+    static fromJS(data: any): FilesForReceiptsView {
+        data = typeof data === 'object' ? data : {};
+        let result = new FilesForReceiptsView();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : <any>undefined;
+        data["mime"] = this.mime;
+        data["fileName"] = this.fileName;
+        return data;
+    }
+}
+
+export interface IFilesForReceiptsView {
+    id?: string;
+    name?: string | undefined;
+    createdDate?: Date;
+    mime?: string | undefined;
+    fileName?: string | undefined;
 }
 
 export class InstanceView implements IInstanceView {
-    id!: string;
-    receiptName?: string | undefined;
-    info!: string;
+    id?: string | undefined;
+    info?: string | undefined;
     recieptId?: string | undefined;
 
     constructor(data?: IInstanceView) {
@@ -275,7 +436,6 @@ export class InstanceView implements IInstanceView {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
-            this.receiptName = _data["receiptName"];
             this.info = _data["info"];
             this.recieptId = _data["recieptId"];
         }
@@ -291,7 +451,6 @@ export class InstanceView implements IInstanceView {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["receiptName"] = this.receiptName;
         data["info"] = this.info;
         data["recieptId"] = this.recieptId;
         return data;
@@ -300,15 +459,14 @@ export class InstanceView implements IInstanceView {
 
 export interface IInstanceView {
     id?: string | undefined;
-    receiptName?: string | undefined;
     info?: string | undefined;
     recieptId?: string | undefined;
 }
 
 export class ReceiptView implements IReceiptView {
-    id!: string;
-    name!: string;
-    createdDate!: Date;
+    id?: string;
+    name?: string | undefined;
+    createdDate?: Date;
 
     constructor(data?: IReceiptView) {
         if (data) {
@@ -349,13 +507,14 @@ export interface IReceiptView {
     createdDate?: Date;
 }
 
-export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
-    id!: string;
-    name!: string;
-    createdDate!: Date;
-    instances!: InstanceView[];
+export class ReceiptWithFullInfo implements IReceiptWithFullInfo {
+    id?: string;
+    name?: string | undefined;
+    createdDate?: Date;
+    instances?: InstanceView[] | undefined;
+    files?: FilesForReceiptsView[] | undefined;
 
-    constructor(data?: IReceiptWithInstancesView) {
+    constructor(data?: IReceiptWithFullInfo) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -374,12 +533,17 @@ export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
                 for (let item of _data["instances"])
                     this.instances!.push(InstanceView.fromJS(item));
             }
+            if (Array.isArray(_data["files"])) {
+                this.files = [] as any;
+                for (let item of _data["files"])
+                    this.files!.push(FilesForReceiptsView.fromJS(item));
+            }
         }
     }
 
-    static fromJS(data: any): ReceiptWithInstancesView {
+    static fromJS(data: any): ReceiptWithFullInfo {
         data = typeof data === 'object' ? data : {};
-        let result = new ReceiptWithInstancesView();
+        let result = new ReceiptWithFullInfo();
         result.init(data);
         return result;
     }
@@ -394,15 +558,26 @@ export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
             for (let item of this.instances)
                 data["instances"].push(item.toJSON());
         }
+        if (Array.isArray(this.files)) {
+            data["files"] = [];
+            for (let item of this.files)
+                data["files"].push(item.toJSON());
+        }
         return data;
     }
 }
 
-export interface IReceiptWithInstancesView {
+export interface IReceiptWithFullInfo {
     id?: string;
     name?: string | undefined;
     createdDate?: Date;
     instances?: InstanceView[] | undefined;
+    files?: FilesForReceiptsView[] | undefined;
+}
+
+export interface FileParameter {
+    data: any;
+    fileName: string;
 }
 
 export class ApiException extends Error {

@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { InstanceView, ReceiptView } from 'src/app/services/ApiService';
+import { FilesForReceiptsView, InstanceView, ReceiptView } from 'src/app/services/ApiService';
 import { 
   InstancesStore,
   InstancesStoreProvider
@@ -58,9 +58,14 @@ export class ReceiptInfoComponent implements OnInit {
   instanceForm!: FormGroup;
   isInstanceFormValid$ = new BehaviorSubject<boolean>(false);
 
-  // Модели поступления и активного издания
+  // Реактивная форма для файла
+  fileForm!: FormGroup;
+  isFileFormValid$ = new BehaviorSubject<boolean>(false);
+
+  // Модели поступления, активного издания и активного файла
   receipt = new ReceiptView();
   instanceActive = new InstanceView();
+  fileActive = new FilesForReceiptsView();
 
   isLoading$ = this.store.isSaveLoading$;  // спиннер загрузки
   isLoadingDelete$ = new BehaviorSubject<boolean>(false);
@@ -72,12 +77,15 @@ export class ReceiptInfoComponent implements OnInit {
   receiptCreatedDate$ = this.store.receiptDateCreated$;
   activeInstance$ = this.store.activeInstance$;
   activeId$ = this.store.activeId$;
+  files$ = this.store.files$;
+  activeFiles$ = this.store.activeFiles$;
 
   isLoading: boolean = false;  //блокировка кнопок при загрузке данных в бд или ее отмене
   isEditMode: boolean = false; //режим редактирования
 
-  // Режим работы для активного издания
+  // Режим работы для активного издания и активного файла
   isWorkStatusOfActiveInstanceIsEdit$ = new BehaviorSubject<boolean>(false);
+  isWorkStatucOfActiveFileIsEdit$ = new BehaviorSubject<boolean>(false);
 
   // id поступления, записанное в маршрут
   receiptIdFromUrl: string | undefined
@@ -88,7 +96,6 @@ export class ReceiptInfoComponent implements OnInit {
   pageSize: number = 5;
   loading = false;
 
-  fileListForReceipt$ = this.fileService.fileListForReceipt$; // список файлов, закрепленного за посступлением
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -125,13 +132,15 @@ export class ReceiptInfoComponent implements OnInit {
        this.total = res.length;
      });
 
-    // следим в каком поступлении мы находимся    
+     this.activeFiles$.subscribe(res=> console.log(`активный файл`, res));
+
     this.route.params.pipe(untilDestroyed(this)).subscribe(
       params =>  this.receiptIdFromUrl = params['id']
     );
 
       this.initReceiptForm();
       this.initInstanceForm();
+      this.initFileForm();
       this.getInfoAboutRecieptAndInstances();
 
       // Следим за изменениями в форме поступлений
@@ -157,6 +166,33 @@ export class ReceiptInfoComponent implements OnInit {
             break;
         }
       });
+
+      // Следим за изменениями в форме с файлами
+      this.fileForm.statusChanges.pipe(untilDestroyed(this)).subscribe((status) => {
+        switch(status) {
+          case 'VALID':
+            this.isFileFormValid$.next(true);
+            break;
+          case 'INVALID':
+            this.isFileFormValid$.next(false);
+            break;
+        }
+      });
+
+      // отслеживаем изменение в списке загруженных файлов
+      // this.fileService.fileLoadList$.subscribe(
+      //   res =>{
+      //     if(res != undefined){
+      //       const newFileForReceipt = new FilesForReceiptsView();
+      //     // id пока специально не добавляю
+      //     newFileForReceipt.fileName = res[res.length - 1].name;
+      //     newFileForReceipt.mime = res[res.length - 1].type;
+      //     newFileForReceipt.name = res[res.length - 1].name;
+      //     this.storeService.addNeFile(newFileForReceipt)
+      //     }
+          
+      //   }
+      // )
   }
 
    // Реактивная форма поступления
@@ -178,10 +214,20 @@ export class ReceiptInfoComponent implements OnInit {
     )
   }
 
+  // Реактивная форма файла
+  private initFileForm(): void {
+    this.fileForm = this.fb.group(
+      {
+        Name: [null, [Validators.required]],
+        CreatedDate: [null, [Validators.required]]
+      }
+    )
+  }
+
   // Заполняем таблицу изданий и форму поступления
   private getInfoAboutRecieptAndInstances() : void {
     // получили список изданий (тут переделать надо)
-    this.storeService.getInstances(this.receiptIdFromUrl).pipe(untilDestroyed(this)).subscribe({
+    this.storeService.getAllInfoFromReceipt(this.receiptIdFromUrl).pipe(untilDestroyed(this)).subscribe({
       next: result => {
         // Сохраняем информацию о поступлении в модель данных
         this.receipt.id = result.id;
@@ -197,6 +243,7 @@ export class ReceiptInfoComponent implements OnInit {
     });
   }
 
+  //------------------------------------------Все для изданий---------------------------------------
   // Сохранить издание/Добавить издание
   saveChangesInstance(id: string) {
 
@@ -295,11 +342,6 @@ export class ReceiptInfoComponent implements OnInit {
     this.store.isWorkStatusOfActiveInstanceIsEdit$.next(true);
   }
 
-  // Режим редактирования поступления
-  editModeReceipt() : void {
-    this.store.isWorkStatusOfReceiptIsEdit$.next(true);
-  }
-
   // добавление строки в таблицу изданий
   addRowInstance(){
     const newRow = new InstanceView();
@@ -312,6 +354,111 @@ export class ReceiptInfoComponent implements OnInit {
     //перебросим пользователя к странице тблицы с добавлением элемента
     this.pageIndex = this.total;
   }
+  //-------------------------------------------------------------------------------------------------
+
+  //---------------------------------------Все для поступлений---------------------------------------
+  // Режим редактирования поступления
+  editModeReceipt() : void {
+    this.store.isWorkStatusOfReceiptIsEdit$.next(true);
+  }
+  //-------------------------------------------------------------------------------------------------
+  //---------------------------------------------Файлы-----------------------------------------------
+  // При скачивании файла, установим активный id
+  download(id:string){
+    //this.store.setActiveId(id);
+    //this.fileService.download(id).subscribe();
+  }
+
+  // Режим редактирования
+  editModeFile(id: string) : void{
+    this.store.setActiveId(id);
+
+    this.activeFiles$.subscribe(
+      result => {
+        this.fileActive.name = result?.name;
+        this.fileActive.createdDate = result?.createdDate;
+
+        // Заполняем реактивную форму
+        this.fileForm.setValue({
+          Name: this.fileActive.name,
+          CreatedDate: this.convertDateTime(this.fileActive.createdDate ?? new Date())
+        });
+      }
+    );
+
+    // сменим статус, так как перешли в редактирование файла
+    this.isWorkStatucOfActiveFileIsEdit$.next(true);
+  }
+
+  // Сохранить файл
+  saveChangesFile(id: string) {
+
+    this.isWorkStatucOfActiveFileIsEdit$.next(false);
+
+    this.activeFiles$.subscribe(
+      res => {
+        this.fileActive.id = res?.id ?? '';
+        this.fileActive.mime = res?.mime;
+        this.fileActive.fileName = res?.fileName;
+
+        this.fileActive.createdDate = new Date(this.fileForm.value.CreatedDate);
+        this.fileActive.name = this.fileForm.value.Name;
+
+        this.storeService.saveFile(this.fileActive);
+      }
+    )
+
+    // Отчистим модель данных
+    this.fileActive = new FilesForReceiptsView();
+    // отчищаем форму
+    // this.fileForm.setValue({
+    //   Name: this.fileActive.name,
+    //   CreatedDate: this.fileActive.createdDate
+    // });
+    
+    this.store.resetActiveId(); // сбросить активный id
+  }
+
+  // Отмена изменений
+  stopChangesFile(id: string) {
+    this.isWorkStatucOfActiveFileIsEdit$.next(false);
+
+    // выберем активный элемент
+    this.store.setActiveId(id);
+
+    // this.activeFiles$.subscribe(
+    //   result => { 
+    //     this.fileActive.createdDate = result?.createdDate;
+    //     this.fileActive.name = result?.name;
+
+    //     // Заполняем реактивную форму
+    //     this.fileForm.setValue({
+    //       Name: this.fileActive.name,
+    //       CreatedDate: this.fileActive.createdDate
+    //     })
+    //   }
+    // )
+    // вообще может это лишнее и надо просто отчистить форму и сменить режим работы(?)
+    // Отчистим модель данных
+    this.fileActive = new FilesForReceiptsView();
+
+    // отчищаем форму
+    // this.fileForm.setValue({
+    //   Name: this.fileActive.name,
+    //   CreatedDate: this.fileActive.createdDate
+    // });
+    
+    this.store.resetActiveId(); // сбросить активный id
+  }
+
+  // Удалить файл из эльфа
+  deleteFile(id: string){
+
+    this.store.setActiveId(id); // определяем активный элемент
+    this.storeService.deleteFile(id);
+    this.store.resetActiveId(); // сбрасываем активный элемент
+  }
+  //-------------------------------------------------------------------------------------------------
 
   // Сохранить изменения
   saveChanges(){
@@ -361,8 +508,6 @@ export class ReceiptInfoComponent implements OnInit {
 
     this.ngxSmartModalService.getModal("cancelChanges").close();
   }
-
-  //-------------Файлы-----------------------
 
   // Перевод даты и времени в нужный формат
   private convertDateTime(date: Date) : string {

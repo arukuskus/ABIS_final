@@ -20,9 +20,6 @@ const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
   styleUrls: ['./file-work.component.css']
 })
 export class FileWorkComponent implements OnInit {
-  //режим работы с карточкой поступления
-  @Input() isEditMode: boolean = false;
-  @Input() fileListForReceipt: NzUploadFile[] = []; // список файлов, закрепленного за посступлением
 
   // список добавляемых файлов
   fileList: NzUploadFile[] = [];
@@ -37,7 +34,7 @@ export class FileWorkComponent implements OnInit {
 
   constructor(
     private msg: NzMessageService,
-    private fileService: FileService
+    private fileService: FileService,
     ) { }
 
   ngOnInit(): void {
@@ -52,7 +49,7 @@ export class FileWorkComponent implements OnInit {
     return new Observable((observer: Observer<boolean>) => {
       const isLt2M = file.size! / 1024 / 1024 < 2;
       if (!isLt2M) {
-        this.msg.error('Image must smaller than 2MB!');
+        this.msg.error('File must smaller than 2MB!');
         this.isMsgErrorSize$.next(true); // чтобы заблокировать пользователю кнопку отправки, пока он не удалит  этот файл (чуть позже применю)
         observer.complete();
         return;
@@ -73,6 +70,7 @@ export class FileWorkComponent implements OnInit {
     // файл, который отправится на сервер
     //const sendFile = this.fileList[this.fileList.length - 1].originFileObj;
     const sendFile: any = this.fileList[this.fileList.length - 1];
+   
     const formData = new FormData();
 
     // отправляем выбранный файл на сервер и получаем с сервера id
@@ -85,8 +83,11 @@ export class FileWorkComponent implements OnInit {
             this.fileList[this.fileList.length - 1].uid = res;
             this.fileList[this.fileList.length - 1].status = "success";
 
-            // сохраним файла в список файлом
-            this.fileService.fileListForReceipt$.next(this.fileList);
+            const saveFile: any = this.fileList[this.fileList.length - 1];
+            this.files.push(saveFile);
+
+            // Сохраним файлики в переменную сервиса (будем подписываться на ее изменение в компоненте поступления)
+            this.fileService.fileLoadList$.next(this.files);
 
             this.msg.success('upload successfully.');
           },

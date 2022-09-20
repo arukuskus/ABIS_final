@@ -3,7 +3,7 @@
     /// <summary>
     /// Возвращает посупление и список экземпляров этого поступления 
     /// </summary>
-    public class ReceiptWithInstancesView
+    public class ReceiptWithFullInfo
     {
         /// <summary>
         /// Уникальный id
@@ -15,16 +15,19 @@
         /// </summary>
         public string Name { get; set; }
 
-
         /// <summary>
         /// Дата создания поступления 
         /// </summary>
         public DateTime CreatedDate { get; set; }
 
         /// <summary>
-        /// Список экземпляров книг
+        /// Список изданий
         /// </summary>
-
         public List<InstanceView> Instances { get; set; }
+
+        /// <summary>
+        /// Список файлов
+        /// </summary>
+        public List<FilesForReceiptsView> Files { get; set; }
     }
 }

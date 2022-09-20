@@ -1,13 +1,13 @@
 <p>file-work works!</p>
 
 <!--Отображаем список файлов, если режим просмотра-->
-<div *ngIf="!isEditMode">
+
   <!-- <nz-upload [nzFileList]="fileList"></nz-upload> -->
   <!--Загрузчик с изображением-->
-  <nz-upload
+  <!-- <nz-upload
     class="avatar-uploader"
     nzListType="picture-card"
-    [nzFileList]="fileListForReceipt"
+    [nzFileList]="fileList"
     [nzPreview]="handlePreview">
       <div>
         <span nz-icon nzType="plus"></span>
@@ -24,12 +24,10 @@
         <img [src]="previewImage" [ngStyle]="{ width: '100%' }" />
       </ng-template>
     </nz-modal>
-</nz-upload>
-</div>
+</nz-upload> -->
+
 
 <!--Отображаем кнопочки загрузки, если режим редактирования-->
-<div *ngIf="isEditMode">
-
 <!--Вторая кнопочка загрузки-->
 <nz-upload
   [(nzFileList)]="fileList"
@@ -51,4 +49,3 @@
   >
     Start Upload
   </button>
-</div>

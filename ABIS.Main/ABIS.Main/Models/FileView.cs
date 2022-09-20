@@ -29,7 +29,7 @@
         /// <summary>
         /// Размер фйла в байтах
         /// </summary>
-        public int Size { get; set; }
+        public Int64 Size { get; set; }
 
         /// <summary>
         /// Тип файла

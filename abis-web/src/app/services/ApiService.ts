@@ -16,7 +16,7 @@ import { HttpClient, HttpHeaders, HttpResponse, HttpResponseBase } from '@angula
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
   })
 export class ApiClient {
     private http: HttpClient;
@@ -90,7 +90,7 @@ export class ApiClient {
      * @param id (optional) 
      * @return Success
      */
-    receiptGET(id: string | undefined): Observable<ReceiptWithInstancesView> {
+    receiptGET(id: string | undefined): Observable<ReceiptWithFullInfo> {
         let url_ = this.baseUrl + "/api/receipt?";
         if (id === null)
             throw new Error("The parameter 'id' cannot be null.");
@@ -113,14 +113,14 @@ export class ApiClient {
                 try {
                     return this.processReceiptGET(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<ReceiptWithInstancesView>;
+                    return _observableThrow(e) as any as Observable<ReceiptWithFullInfo>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<ReceiptWithInstancesView>;
+                return _observableThrow(response_) as any as Observable<ReceiptWithFullInfo>;
         }));
     }
 
-    protected processReceiptGET(response: HttpResponseBase): Observable<ReceiptWithInstancesView> {
+    protected processReceiptGET(response: HttpResponseBase): Observable<ReceiptWithFullInfo> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -131,7 +131,7 @@ export class ApiClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ReceiptWithInstancesView.fromJS(resultData200);
+            result200 = ReceiptWithFullInfo.fromJS(resultData200);
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -146,7 +146,7 @@ export class ApiClient {
      * @param body (optional) 
      * @return Success
      */
-    receiptPOST(body: ReceiptWithInstancesView | undefined): Observable<boolean> {
+    receiptPOST(body: ReceiptWithFullInfo | undefined): Observable<boolean> {
         let url_ = this.baseUrl + "/api/save/receipt";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -203,7 +203,7 @@ export class ApiClient {
      * @param body (optional) 
      * @return Success
      */
-    receiptPOST2(body: ReceiptWithInstancesView | undefined): Observable<boolean> {
+    receiptPOST2(body: ReceiptWithFullInfo | undefined): Observable<boolean> {
         let url_ = this.baseUrl + "/api/add/receipt";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -257,9 +257,60 @@ export class ApiClient {
     }
 }
 
+export class FilesForReceiptsView implements IFilesForReceiptsView {
+    id!: string;
+    name?: string | undefined;
+    createdDate?: Date;
+    mime?: string | undefined;
+    fileName?: string | undefined;
+
+    constructor(data?: IFilesForReceiptsView) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : <any>undefined;
+            this.mime = _data["mime"];
+            this.fileName = _data["fileName"];
+        }
+    }
+
+    static fromJS(data: any): FilesForReceiptsView {
+        data = typeof data === 'object' ? data : {};
+        let result = new FilesForReceiptsView();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : <any>undefined;
+        data["mime"] = this.mime;
+        data["fileName"] = this.fileName;
+        return data;
+    }
+}
+
+export interface IFilesForReceiptsView {
+    id?: string;
+    name?: string | undefined;
+    createdDate?: Date;
+    mime?: string | undefined;
+    fileName?: string | undefined;
+}
+
 export class InstanceView implements IInstanceView {
     id!: string;
-    receiptName?: string | undefined;
     info!: string;
     recieptId?: string | undefined;
 
@@ -275,7 +326,6 @@ export class InstanceView implements IInstanceView {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
-            this.receiptName = _data["receiptName"];
             this.info = _data["info"];
             this.recieptId = _data["recieptId"];
         }
@@ -291,7 +341,6 @@ export class InstanceView implements IInstanceView {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["receiptName"] = this.receiptName;
         data["info"] = this.info;
         data["recieptId"] = this.recieptId;
         return data;
@@ -300,7 +349,6 @@ export class InstanceView implements IInstanceView {
 
 export interface IInstanceView {
     id?: string | undefined;
-    receiptName?: string | undefined;
     info?: string | undefined;
     recieptId?: string | undefined;
 }
@@ -349,13 +397,14 @@ export interface IReceiptView {
     createdDate?: Date;
 }
 
-export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
+export class ReceiptWithFullInfo implements IReceiptWithFullInfo {
     id!: string;
     name!: string;
     createdDate!: Date;
     instances!: InstanceView[];
+    files!: FilesForReceiptsView[];
 
-    constructor(data?: IReceiptWithInstancesView) {
+    constructor(data?: IReceiptWithFullInfo) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -374,12 +423,17 @@ export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
                 for (let item of _data["instances"])
                     this.instances!.push(InstanceView.fromJS(item));
             }
+            if (Array.isArray(_data["files"])) {
+                this.files = [] as any;
+                for (let item of _data["files"])
+                    this.files!.push(FilesForReceiptsView.fromJS(item));
+            }
         }
     }
 
-    static fromJS(data: any): ReceiptWithInstancesView {
+    static fromJS(data: any): ReceiptWithFullInfo {
         data = typeof data === 'object' ? data : {};
-        let result = new ReceiptWithInstancesView();
+        let result = new ReceiptWithFullInfo();
         result.init(data);
         return result;
     }
@@ -394,15 +448,21 @@ export class ReceiptWithInstancesView implements IReceiptWithInstancesView {
             for (let item of this.instances)
                 data["instances"].push(item.toJSON());
         }
+        if (Array.isArray(this.files)) {
+            data["files"] = [];
+            for (let item of this.files)
+                data["files"].push(item.toJSON());
+        }
         return data;
     }
 }
 
-export interface IReceiptWithInstancesView {
+export interface IReceiptWithFullInfo {
     id?: string;
     name?: string | undefined;
     createdDate?: Date;
     instances?: InstanceView[] | undefined;
+    files?: FilesForReceiptsView[] | undefined;
 }
 
 export class ApiException extends Error {

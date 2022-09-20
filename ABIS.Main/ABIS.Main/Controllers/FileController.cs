@@ -59,12 +59,12 @@ namespace ABIS.Main.Controllers
                 {
                     Id = new Guid(),
                     Name = file.FileName,
-                    Path = _fileOptions.Value.fileStore,
+                    Path = filePath,
                     DateTime = DateTime.UtcNow,
-                    Size = (int)file.Length,
+                    Size = file.Length,
                     Mime = file.ContentType,
-                    Author = "",
-                    NameInFileSystem = ""
+                    NameInFileSystem = "",
+                    Author = ""
                 };
                 _aBISContext.Files.Add(newFileInDb);
                 await _aBISContext.SaveChangesAsync(cancellationToken);
@@ -91,20 +91,16 @@ namespace ABIS.Main.Controllers
         /// Вытаскивает из бд информацию о файле по id и возвращает его пользователю на скачку
         /// </summary>
         [HttpGet]
-        [Route("get")]
-        public async Task<bool> GetFile(Guid id, CancellationToken cancellationToken)
+        [Route("download")]
+        public async Task<FileResult> DownloadFile(Guid id, CancellationToken cancellationToken)
         {
-            return true;
-        }
+            var result = await _aBISContext.Files.Where(x => x.Id == id).SingleOrDefaultAsync(cancellationToken);
 
-        /// <summary>
-        /// Удаляет файл из бд
-        /// </summary>
-        [HttpPost]
-        [Route("delete/file")]
-        public async Task<bool> DeleteFile(Guid id, CancellationToken cancellationToken)
-        {
-            return true;
+            if(result == null) { throw new Exception("не удалось найти скачеваемый файл"); }
+
+            var bytes = await System.IO.File.ReadAllBytesAsync(result.Path);
+
+            return File(bytes, result.Mime, Path.GetFileName(result.Path));
         }
     }
 }
