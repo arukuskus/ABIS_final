@@ -28,9 +28,9 @@ namespace ABIS.Data.Models
         public DateTime CreatedDate { get; set; }
 
         /// <summary>
-        /// Тип файла (будет приходить из таблицы Files)
+        /// Размер фйла в байтах
         /// </summary>
-        public string Mime { get; set; }
+        public Int64 Size { get; set; }
 
         /// <summary>
         /// Фактическое название файла (будет приходить из таблицы Files)

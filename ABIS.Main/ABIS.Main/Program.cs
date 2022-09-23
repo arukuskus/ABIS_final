@@ -1,6 +1,9 @@
 ﻿using ABIS.Data.Models;
+using ABIS.Main.Cqrs.Queries;
 using ABIS.Main.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+using MediatR;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -17,6 +20,11 @@ services.AddDbContext<ABISContext>(options => { options.UseNpgsql(configuration.
 
 // Добавление swagger
 services.AddSwaggerGen();
+
+services.AddHttpContextAccessor();
+services.AddMediatR(Assembly.GetExecutingAssembly());
+services.AddTransient<IGetDownloadFileQueryHandler, GetDownloadFileQueryHandler>();
+
 services.AddCors();
 
 var app = builder.Build();

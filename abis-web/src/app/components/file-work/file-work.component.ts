@@ -1,19 +1,9 @@
-import { HttpClient, HttpRequest, HttpResponse } from '@angular/common/http';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzUploadChangeParam, NzUploadFile } from 'ng-zorro-antd/upload';
 import { BehaviorSubject, Observable, Observer } from 'rxjs';
-import { filter } from 'rxjs/operators';
-import { FileParameter, FileService } from 'src/app/services/file-service/file.service';
+import { FileService } from 'src/app/services/file-service/file.service';
 
-// это вроде преобразование файлов в ulploadFile
-const getBase64 = (file: File): Promise<string | ArrayBuffer | null> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
 @Component({
   selector: 'app-file-work',
   templateUrl: './file-work.component.html',
@@ -23,14 +13,12 @@ export class FileWorkComponent implements OnInit {
 
   // список добавляемых файлов
   fileList: NzUploadFile[] = [];
-  files: File[] = [];
 
   uploading$ = new BehaviorSubject<boolean>(false);
   isMsgErrorSize$ = new BehaviorSubject<boolean>(false);
 
-  // загрузчик изображения с кардинкой и url - картинки
-  loading = false;
-  avatarUrl?: string;
+  // будем передавать загруженный файл в file-component
+  @Output() onChanged = new EventEmitter<NzUploadFile>();
 
   constructor(
     private msg: NzMessageService,
@@ -50,25 +38,41 @@ export class FileWorkComponent implements OnInit {
       const isLt2M = file.size! / 1024 / 1024 < 2;
       if (!isLt2M) {
         this.msg.error('File must smaller than 2MB!');
-        this.isMsgErrorSize$.next(true); // чтобы заблокировать пользователю кнопку отправки, пока он не удалит  этот файл (чуть позже применю)
         observer.complete();
         return;
       }
-      this.isMsgErrorSize$.next(false);
-      observer.next(false);
+      observer.next(isLt2M);
       observer.complete();
     });
   };
 
-  previewImage: string | undefined = '';
-  previewVisible = false;
+  // Отслеживание загрузки файлов (и чтение ответа с сервера)
+  handleChange(info: NzUploadChangeParam):void{
+    let fileList = [...info.fileList];
 
+    //будем показывать только последний загруженный файл
+    fileList = fileList.slice(-1);
+
+    // Прочитаем ответ с сервера и положим его в newLoadFile
+    fileList = fileList.map(file => {
+      if(file.response){
+        // получим id для загруженного файла с сервера
+        file.uid = file.response;
+         // скажем что файл успешно загрузился
+        this.msg.success('upload successfully.');
+        this.newLoadFile(file);
+      }
+      return file;
+    });
+    // отчищаем список загруженных файлов (чтобв там всегда был 1 элемент)
+    this.fileList = [];
+
+    this.fileList = fileList
+  }
   // Загрузка файла при нажатии на кнопку
   handleUpload(): void {
     this.uploading$.next(true);
 
-    // файл, который отправится на сервер
-    //const sendFile = this.fileList[this.fileList.length - 1].originFileObj;
     const sendFile: any = this.fileList[this.fileList.length - 1];
    
     const formData = new FormData();
@@ -77,19 +81,21 @@ export class FileWorkComponent implements OnInit {
     if(sendFile != undefined){
       formData.append('file', sendFile, sendFile?.name);
 
-      this.fileService.store(formData).subscribe({
+      this.fileService.upload(formData).subscribe({
           next: res =>{
-            // сохраним пришедшее id
-            this.fileList[this.fileList.length - 1].uid = res;
-            this.fileList[this.fileList.length - 1].status = "success";
+            if(res.id){
+              // сохраним пришедшее id
+              this.fileList[this.fileList.length - 1].uid = res.id;
+              this.fileList[this.fileList.length - 1].status = "success";
 
-            const saveFile: any = this.fileList[this.fileList.length - 1];
-            this.files.push(saveFile);
+              //файл, который отдаем компоненту поступления
+              this.newLoadFile(this.fileList[this.fileList.length - 1]);
 
-            // Сохраним файлики в переменную сервиса (будем подписываться на ее изменение в компоненте поступления)
-            this.fileService.fileLoadList$.next(this.files);
-
-            this.msg.success('upload successfully.');
+              this.msg.success('upload successfully.');
+            }else{
+              this.msg.error('upload failed.');
+            }
+            
           },
           error: () =>{
             this.msg.error('upload failed.');
@@ -104,12 +110,8 @@ export class FileWorkComponent implements OnInit {
     }
   }
 
-  // будет выполняться при нажатии на ссылку файла или значок предварительного просмотра.
-  handlePreview = async (file: NzUploadFile): Promise<void> => {
-    if (!file.url && !file.preview) {
-      file.preview = await getBase64(file.originFileObj!);
-    }
-    this.previewImage = file.url || file.preview;
-    this.previewVisible = true;
-  };
+  // возвращаем загруженный файл
+  private newLoadFile(increased: any) {
+    this.onChanged.emit(increased);
+  }
 }

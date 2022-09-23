@@ -27,7 +27,7 @@ namespace ABIS.Data.Models
         public string Path { get; set; }
 
         /// <summary>
-        /// Название файла на файловой системе (например все файлы называются {id}.data)
+        /// Название файла на файловой системе (например все файлы называются {id}.dat)
         /// </summary>
         // этот момент не до конца понимаю
         public string NameInFileSystem { get; set; }

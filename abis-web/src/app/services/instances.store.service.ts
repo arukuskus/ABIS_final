@@ -46,17 +46,22 @@ export class InstancesStoreService {
 
   // Сохраним инфо об измененном поступлении
   saveNewReceipt(newReceipt: ReceiptView){
-    this._store.setNewProps(newReceipt.id, newReceipt.name, newReceipt.createdDate);
+    this._store.setNewProps(newReceipt);
   }
 
   // Получить издания и поступление с бэка
   getAllInfoFromReceipt(id: string | undefined) {
     return this._apiService.receiptGET(id).pipe(
         tap((data) => {
-            // тут же сохраним данные в эльф
-            this._store.setInstances(data.instances);
-            this._store.setNewProps(data.id, data.name, data.createdDate);
-            this._store.setFiles(data.files);
+          let receipt = new ReceiptView();
+          receipt.id = data.id;
+          receipt.createdDate = data.createdDate;
+          receipt.name = data.name;
+
+          // тут же сохраним данные в эльф
+          this._store.setInstances(data.instances);
+          this._store.setNewProps(receipt);
+          this._store.setFiles(data.files);
         })
     );
   }
@@ -65,29 +70,85 @@ export class InstancesStoreService {
   saveChangeOfReceipt(){
 
     const newReceipt = new ReceiptWithFullInfo();
-    // вообще, слишком много subscribe и надо с этим что - то делать для сохранения логики
-    this._store.receiptId$.subscribe(data=>{newReceipt.id = data??''});
-    this._store.receiptDateCreated$.subscribe(data=>{newReceipt.createdDate = data});
-    this._store.receiptName$.subscribe(data=>{newReceipt.name = data});
 
-    this._store.instances$.subscribe(data=>{newReceipt.instances = data});
-    this._store.files$.subscribe(data=>{newReceipt.files = data});
+    this._store.receipt$.subscribe(data=>{
+      newReceipt.id = data?.receiptId ?? '';
+      newReceipt.name = data?.name ?? '';
+      newReceipt.createdDate = data?.createdDate ?? new Date();
+    });
+
+    this._store.instances$.subscribe(data=>{
+      let instances: InstanceView[] = [];
+      data.forEach(el =>{
+        let instance = new InstanceView();
+        instance.id = el.id;
+        instance.info = el.info;
+        instance.recieptId = el.recieptId
+
+        instances.push(instance);
+      })
+      newReceipt.instances = instances;
+    });
+
+    this._store.files$.subscribe(data => {
+      let files: FilesForReceiptsView[] = [];
+      data.forEach(el => {
+        let file = new FilesForReceiptsView();
+        
+        file.id = el.id;
+        file.name = el.name;
+        file.createdDate = el.createdDate;
+        file.fileName = el.fileName;
+        file.size = file.size;
+
+        files.push(file);
+      })
+      newReceipt.files = files;
+    });
 
     // ожидаем true или false
-    return this._apiService.receiptPOST(newReceipt).pipe();
+    return this._apiService.receiptPOST(newReceipt);
   }
 
   // Добавить поступление на бэк
   addNewReceipt(){
     const newReceipt = new ReceiptWithFullInfo();
-    this._store.receiptId$.subscribe(data=>{newReceipt.id = data??''});
-    this._store.receiptDateCreated$.subscribe(data=>{newReceipt.createdDate = data});
-    this._store.receiptName$.subscribe(data=>{newReceipt.name = data});
 
-    this._store.instances$.subscribe(data=>{newReceipt.instances = data});
-    this._store.files$.subscribe(data=>{newReceipt.files = data});
+    this._store.receipt$.subscribe(data=>{
+      newReceipt.id = data?.receiptId ?? '';
+      newReceipt.name = data?.name ?? '';
+      newReceipt.createdDate = data?.createdDate ?? new Date();
+    });
 
-    return this._apiService.receiptPOST2(newReceipt).pipe();
+    this._store.instances$.subscribe(data=>{
+      let instances: InstanceView[] = [];
+      data.forEach(el =>{
+        let instance = new InstanceView();
+        instance.id = el.id;
+        instance.info = el.info;
+        instance.recieptId = el.recieptId
+
+        instances.push(instance);
+      })
+      newReceipt.instances = instances;
+    });
+
+    this._store.files$.subscribe(data => {
+      let files: FilesForReceiptsView[] = [];
+      data.forEach(el => {
+        let file = new FilesForReceiptsView();
+        // id пока добавлять нк буду
+        file.name = el.name;
+        file.createdDate = el.createdDate;
+        file.fileName = el.fileName;
+        file.size = file.size;
+
+        files.push(file);
+      })
+      newReceipt.files = files;
+    });
+
+    return this._apiService.receiptPOST2(newReceipt);
   }
 
 }

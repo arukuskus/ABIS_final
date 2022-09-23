@@ -260,8 +260,8 @@ export class ApiClient {
 export class FilesForReceiptsView implements IFilesForReceiptsView {
     id!: string;
     name?: string | undefined;
-    createdDate?: Date;
-    mime?: string | undefined;
+    createdDate!: Date;
+    size?: number;
     fileName?: string | undefined;
 
     constructor(data?: IFilesForReceiptsView) {
@@ -278,7 +278,7 @@ export class FilesForReceiptsView implements IFilesForReceiptsView {
             this.id = _data["id"];
             this.name = _data["name"];
             this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : <any>undefined;
-            this.mime = _data["mime"];
+            this.size = _data["size"];
             this.fileName = _data["fileName"];
         }
     }
@@ -295,7 +295,7 @@ export class FilesForReceiptsView implements IFilesForReceiptsView {
         data["id"] = this.id;
         data["name"] = this.name;
         data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : <any>undefined;
-        data["mime"] = this.mime;
+        data["size"] = this.size;
         data["fileName"] = this.fileName;
         return data;
     }
@@ -305,7 +305,7 @@ export interface IFilesForReceiptsView {
     id?: string;
     name?: string | undefined;
     createdDate?: Date;
-    mime?: string | undefined;
+    size?: number;
     fileName?: string | undefined;
 }
 

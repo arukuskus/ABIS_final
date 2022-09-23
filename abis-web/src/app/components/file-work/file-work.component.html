@@ -1,37 +1,11 @@
-<p>file-work works!</p>
-
-<!--Отображаем список файлов, если режим просмотра-->
-
-  <!-- <nz-upload [nzFileList]="fileList"></nz-upload> -->
-  <!--Загрузчик с изображением-->
-  <!-- <nz-upload
-    class="avatar-uploader"
-    nzListType="picture-card"
-    [nzFileList]="fileList"
-    [nzPreview]="handlePreview">
-      <div>
-        <span nz-icon nzType="plus"></span>
-        <div style="margin-top: 8px">Upload</div>
-      </div>
-
-      <nz-modal
-        [nzVisible]="previewVisible"
-        [nzContent]="modalContent"
-        [nzFooter]="null"
-        (nzOnCancel)="previewVisible = false"
-      >
-      <ng-template #modalContent>
-        <img [src]="previewImage" [ngStyle]="{ width: '100%' }" />
-      </ng-template>
-    </nz-modal>
-</nz-upload> -->
-
-
 <!--Отображаем кнопочки загрузки, если режим редактирования-->
-<!--Вторая кнопочка загрузки-->
+<!-- [nzBeforeUpload]="beforeUpload" -->
 <nz-upload
+  nzAction="https://localhost:7155/file/save/store"
   [(nzFileList)]="fileList"
-  [nzBeforeUpload]="beforeUpload">
+  [nzBeforeUpload]="beforeUpload"
+  (nzChange)="handleChange($event)"
+  >
   <button nz-button>
     <span nz-icon nzType="upload"></span>
     Click to Upload
@@ -39,7 +13,7 @@
 </nz-upload>
 
 <!--Кнопка, которая запускает запрос к серверу на загрузку файлов на сервер-->
-<button
+<!-- <button
     nz-button
     [nzType]="'primary'"
     [nzLoading]="uploading$ | async"
@@ -48,4 +22,4 @@
     style="margin-top: 16px"
   >
     Start Upload
-  </button>
+  </button> -->

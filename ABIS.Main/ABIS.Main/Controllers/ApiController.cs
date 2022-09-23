@@ -60,7 +60,7 @@ namespace ABIS.Main.Controllers
                     Id=f.Id,
                     Name=f.Name,
                     CreatedDate=f.CreatedDate,
-                    Mime = f.Mime,
+                    Size = f.Size,
                     FileName = f.FileName
                 }).ToList()
             }).Where(x => x.Id == id).SingleOrDefaultAsync(cancellationToken);
@@ -164,7 +164,7 @@ namespace ABIS.Main.Controllers
                                 Id = vmFile.Id,
                                 Name = vmFile.Name,
                                 CreatedDate = vmFile.CreatedDate,
-                                Mime = storeFile.Mime,
+                                Size = storeFile.Size,
                                 FileName = storeFile.Name,
                                 RecieptId = newReceipt.Id
                             });
@@ -179,7 +179,7 @@ namespace ABIS.Main.Controllers
                             // Обновим для него информацию
                             dbFile.Name = vmFile.Name; // название файла, которое ввел пользователь
                             dbFile.CreatedDate = vmFile.CreatedDate;
-                            dbFile.Mime = storeFile.Mime; // расширение файла всегда берется фактическое (тоже не уверенна что нужно)
+                            dbFile.Size = storeFile.Size;
                             dbFile.FileName = storeFile.Name; //не уверенна что фактическое имя нужно обновлять
                         }
                         else
@@ -272,7 +272,7 @@ namespace ABIS.Main.Controllers
                                     Id = newFile.Id,
                                     Name = newFile.Name,
                                     CreatedDate = newFile.CreatedDate,
-                                    Mime = storeFile.Mime,
+                                    Size = storeFile.Size,
                                     FileName = storeFile.Name,
                                     RecieptId = bdReceipt.Id
                                 });

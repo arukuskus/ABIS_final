@@ -1,5 +1,4 @@
-
-<nz-page-header class="site-page-header" nzTitle="Поступление" nzSubtitle="{{receiptName$ | async}}">
+<nz-page-header class="site-page-header" nzTitle="Поступление" nzSubtitle="{{(receipt$| async)?.name}}">
  
 </nz-page-header>
 
@@ -10,20 +9,19 @@
     nz-button 
     nzType="link" 
     routerLink="/receipts"
-    [disabled]="isLoading || isEditMode">
+    [disabled]="isLoading || (isEditMode$ | async)">
     Назад</button>
 
     <button
-      *ngIf="!isEditMode"
+      *ngIf="!(isEditMode$ | async)"
       nz-button
       nzType="primary"
-      (click)="editModeReceipt()"
-      >
-        Редактировать
+      (click)="editModeReceipt()">
+    Редактировать
     </button>
 
     <button 
-      *ngIf="!isEditMode"
+      *ngIf="!(isEditMode$ | async)"
       nz-button 
       nzType="primary" 
       nzDanger>
@@ -31,22 +29,26 @@
     </button>
 
     <button
-      *ngIf="isEditMode"
+      *ngIf="(isEditMode$ | async)"
       nz-button 
       nzType="primary"
-      [disabled]="!(isFormValid$ | async) || (isWorkStatusOfActiveInstanceIsEdit$ | async)"
+      [disabled]="!(isFormValid$ | async) || 
+                  (isWorkStatusOfActiveInstanceIsEdit$ | async) || 
+                  (isWorkStatucOfActiveFileIsEdit$ | async)"
       (click)="saveChanges()"
       [nzLoading]="isLoading">
       Сохранить изменения
     </button>
 
     <button 
-      *ngIf="isEditMode"
+      *ngIf="(isEditMode$ | async)"
       nz-button 
       nzType="primary" 
       nzDanger
       (click)="cancelChanges.open()"
-      [disabled]="isLoading || (isWorkStatusOfActiveInstanceIsEdit$ | async)">
+      [disabled]="isLoading || 
+                  (isWorkStatusOfActiveInstanceIsEdit$ | async) || 
+                  (isWorkStatucOfActiveFileIsEdit$ | async)">
       Отменить изменения
     </button>
     
@@ -57,12 +59,12 @@
          <!--Информация о поступлении-->
 
           <!--Просмотр-->
-          <p *ngIf="!isEditMode"> Название: {{receiptName$ | async}}</p>
-          <p *ngIf="!isEditMode"> Дата создания: {{receiptCreatedDate$ | async | date:'medium'}}</p>
+          <p *ngIf="!(isEditMode$ | async)"> Название: {{(receipt$ | async)?.name}}</p>
+          <p *ngIf="!(isEditMode$ | async)"> Дата создания: {{(receipt$ | async)?.createdDate}}</p>
 
           <!--Редактиирование-->
          <form 
-          *ngIf="isEditMode" 
+          *ngIf="(isEditMode$ | async)" 
           [formGroup]="receiptForm" 
           nz-form
          >
@@ -107,7 +109,9 @@
           <button 
             nz-button 
             nzType="primary"
-            [disabled]="(!isEditMode || isLoading) || (isWorkStatusOfActiveInstanceIsEdit$ | async)"
+            [disabled]="!(isEditMode$ | async) || 
+                        isLoading || 
+                        (isWorkStatusOfActiveInstanceIsEdit$ | async)"
             (click)="addRowInstance()"
             >
             Добавить издание
@@ -169,13 +173,16 @@
                     nz-button
                     nzType="link"
                     (click)="editMode(instance.id)"
-                    [disabled]="isLoading || (isWorkStatusOfActiveInstanceIsEdit$ | async) || !isEditMode">
+                    [disabled]="isLoading || 
+                                (isWorkStatusOfActiveInstanceIsEdit$ | async) || 
+                                !(isEditMode$ | async) ||
+                                (isWorkStatucOfActiveFileIsEdit$ | async)">
                     <span nz-icon nzType="edit" nzTheme="outline"></span>
                   </button>
 
                   <!--Сохранить изменения (галочка)-->
                   <button 
-                    *ngIf="isEditMode && instance.id == (activeId$ | async)" 
+                    *ngIf="(isEditMode$ | async) && instance.id == (activeId$ | async)" 
                     nz-button 
                     nzType="link" 
                     (click)="saveChangesInstance(instance.id)"
@@ -185,7 +192,7 @@
 
                   <!--Отменить изменения-->
                   <button 
-                    *ngIf="isEditMode && instance.id == (activeId$ | async)" 
+                    *ngIf="(isEditMode$ | async) && instance.id == (activeId$ | async)" 
                     nz-button
                     nzType="link"
                     [disabled]="isLoading"
@@ -199,7 +206,10 @@
                     nz-button 
                     nzType="link"
                     (click)="instanceDelModal.open()"
-                    [disabled]="isLoading || (isWorkStatusOfActiveInstanceIsEdit$ | async) || !isEditMode">
+                    [disabled]="isLoading || 
+                                (isWorkStatusOfActiveInstanceIsEdit$ | async) || 
+                                !(isEditMode$ | async) ||
+                                (isWorkStatucOfActiveFileIsEdit$ | async)">
                     <span nz-icon nzType="delete" nzTheme="outline"></span>
                   </button>
                 </td>
@@ -224,8 +234,9 @@
 
         <nz-tab nzTitle="Файлы">
           <!--Кнопка загрузки файда-->
-          <div *ngIf="isEditMode">
-            <app-file-work>
+          <div *ngIf="(isEditMode$ | async)">
+            <app-file-work (onChanged)="onChanged($event)">
+              
             </app-file-work>
           </div>
 
@@ -243,7 +254,7 @@
               <tr>
                 <th>Название</th>
                 <th>Дата создания</th>
-                <th>Тип файла</th>
+                <th>Размер файла</th>
                 <th>Файл</th>
                 <th>Режим работы</th>
               </tr>
@@ -286,12 +297,13 @@
                   </form>
                 </td>
 
-                <!--Тип файла-->
-                <td>{{file.mime}}</td>
+                <!--Размер файла-->
+                <td>{{file.size}}</td>
 
                 <!--Ссылка на скачивание файла-->
                 <!-- href="https://localhost:7155/file/download?id=2715a202-1ebc-48e8-82fb-bd7e55956292" -->
-                <td *ngIf="file.id != (activeId$ | async)" ><a (click)="download(file.id)" href="https://localhost:7155/file/download?id={{file.id}}"> {{file.fileName}} </a></td>
+                <td *ngIf="file.id != (activeId$ | async)" ><a href="https:/localhost:7155/api/FileApi/Download?id={{file.id}}"> {{file.fileName}} </a></td>
+                <!-- <td *ngIf="file.id != (activeId$ | async)" ><a (click)="download(file.id)"> {{file.fileName}} </a></td> -->
                 <td *ngIf="file.id == (activeId$ | async)">{{file.fileName}}</td>
 
                 <!--Режим работы (кнопочки)-->
@@ -301,13 +313,16 @@
                     nz-button
                     nzType="link"
                     (click)="editModeFile(file.id)"
-                    [disabled]="isLoading || (isWorkStatucOfActiveFileIsEdit$ | async) || !isEditMode">
+                    [disabled]="isLoading || 
+                                (isWorkStatucOfActiveFileIsEdit$ | async) || 
+                                !(isEditMode$ | async) ||
+                                (isWorkStatusOfActiveInstanceIsEdit$ | async)">
                     <span nz-icon nzType="edit" nzTheme="outline"></span>
                   </button>
 
                   <!--Сохранить изменения (галочка)-->
                   <button 
-                    *ngIf="isEditMode && file.id == (activeId$ | async)" 
+                    *ngIf="(isEditMode$ | async) && file.id == (activeId$ | async)" 
                     nz-button 
                     nzType="link" 
                     (click)="saveChangesFile(file.id)"
@@ -317,7 +332,7 @@
 
                   <!--Отменить изменения-->
                   <button 
-                    *ngIf="isEditMode && file.id == (activeId$ | async)" 
+                    *ngIf="(isEditMode$ | async) && file.id == (activeId$ | async)" 
                     nz-button
                     nzType="link"
                     [disabled]="isLoading"
@@ -325,16 +340,32 @@
                     <span nz-icon nzType="close" nzTheme="outline"></span>
                   </button>
 
-                  <!--Удалить издание-->
+                  <!--Удалить файл-->
                   <button 
                     *ngIf="file.id != (activeId$ | async)"
                     nz-button 
                     nzType="link"
-                    (click)="deleteFile(file.id)"
-                    [disabled]="isLoading || (isWorkStatucOfActiveFileIsEdit$ | async) || !isEditMode">
+                    (click)="fileDelModal.open()"
+                    [disabled]="isLoading || 
+                                (isWorkStatucOfActiveFileIsEdit$ | async) || 
+                                !(isEditMode$ | async) ||
+                                (isWorkStatusOfActiveInstanceIsEdit$ | async)">
                     <span nz-icon nzType="delete" nzTheme="outline"></span>
                   </button>
                 </td>
+
+                <!--Модальное окно для изданий-->
+                <ngx-smart-modal #fileDelModal identifier="fileDelModal">
+                  <p>Вы уверенны что хотите удалить файл? {{file.name}}</p>
+                  <button nz-button
+                    nzType="primary" nzDanger (click)="deleteFile(file.id)">
+                     Да
+                  </button>
+                  <button nz-button
+                    nzType="link" (click)="fileDelModal.close()">
+                    Закрыть
+                  </button>
+                </ngx-smart-modal>
               </tr>
             </tbody>
           </nz-table>
@@ -350,6 +381,7 @@
 
   <div>{{activeFiles$ | async | json}}</div>
   <div>{{activeInstance$ | async | json}}</div>
+  <div>{{activeId$ | async | json}}</div>
 <!--Модальное окно для отмены действий-->
 <ngx-smart-modal #cancelChanges identifier="cancelChanges">
   <p>Вы уверенны что хотите отменить все изменения?</p>

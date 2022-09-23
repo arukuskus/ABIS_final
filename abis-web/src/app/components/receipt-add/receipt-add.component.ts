@@ -61,9 +61,11 @@ export class ReceiptAddComponent implements OnInit {
 
   // Хранилище
   instances$ = this.store.instances$;
-  receiptId$ = this.store.receiptId$;
-  receiptName$ = this.store.receiptName$;
-  receiptCreatedDate$ = this.store.receiptDateCreated$;
+  // receiptId$ = this.store.receiptId$;
+  // receiptName$ = this.store.receiptName$;
+  // receiptCreatedDate$ = this.store.receiptDateCreated$;
+  receipt$ = this.store.receipt$;
+
   activeInstance$ = this.store.activeInstance$;
   activeId$ = this.store.activeId$;
 
@@ -102,6 +104,7 @@ export class ReceiptAddComponent implements OnInit {
         this.total = res.length;
       }
     );
+    
 
     this.initReceiptForm();
     this.initInstanceForm();

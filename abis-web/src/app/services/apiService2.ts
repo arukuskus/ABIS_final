@@ -255,18 +255,18 @@ export class Client {
     }
 
     /**
-     * @param file (optional) 
+     * @param request (optional) 
      * @return Success
      */
-    store(file: FileParameter | undefined): Observable<string> {
-        let url_ = this.baseUrl + "/file/save/store";
+    upload(request: FileParameter | undefined): Observable<UploadCommandResult> {
+        let url_ = this.baseUrl + "/api/FileApi/Upload";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = new FormData();
-        if (file === null || file === undefined)
-            throw new Error("The parameter 'file' cannot be null.");
+        if (request === null || request === undefined)
+            throw new Error("The parameter 'request' cannot be null.");
         else
-            content_.append("file", file.data, file.fileName ? file.fileName : "file");
+            content_.append("request", request.data, request.fileName ? request.fileName : "request");
 
         let options_ : any = {
             body: content_,
@@ -278,20 +278,20 @@ export class Client {
         };
 
         return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processStore(response_);
+            return this.processUpload(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
                 try {
-                    return this.processStore(response_ as any);
+                    return this.processUpload(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<string>;
+                    return _observableThrow(e) as any as Observable<UploadCommandResult>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<string>;
+                return _observableThrow(response_) as any as Observable<UploadCommandResult>;
         }));
     }
 
-    protected processStore(response: HttpResponseBase): Observable<string> {
+    protected processUpload(response: HttpResponseBase): Observable<UploadCommandResult> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -302,8 +302,7 @@ export class Client {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : <any>null;
-    
+            result200 = UploadCommandResult.fromJS(resultData200);
             return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
@@ -315,25 +314,25 @@ export class Client {
     }
 
     /**
-     * @param body (optional) 
+     * @param id (optional) 
      * @return Success
      */
-    download(body: string | undefined): Observable<void> {
-        let url_ = this.baseUrl + "/file/download";
+    download(id: string | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/api/FileApi/Download?";
+        if (id === null)
+            throw new Error("The parameter 'id' cannot be null.");
+        else if (id !== undefined)
+            url_ += "Id=" + encodeURIComponent("" + id) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
-        const content_ = JSON.stringify(body);
-
         let options_ : any = {
-            body: content_,
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
-                "Content-Type": "application/json",
             })
         };
 
-        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
             return this.processDownload(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
@@ -371,7 +370,7 @@ export class FilesForReceiptsView implements IFilesForReceiptsView {
     id?: string;
     name?: string | undefined;
     createdDate?: Date;
-    mime?: string | undefined;
+    size?: number;
     fileName?: string | undefined;
 
     constructor(data?: IFilesForReceiptsView) {
@@ -388,7 +387,7 @@ export class FilesForReceiptsView implements IFilesForReceiptsView {
             this.id = _data["id"];
             this.name = _data["name"];
             this.createdDate = _data["createdDate"] ? new Date(_data["createdDate"].toString()) : <any>undefined;
-            this.mime = _data["mime"];
+            this.size = _data["size"];
             this.fileName = _data["fileName"];
         }
     }
@@ -405,7 +404,7 @@ export class FilesForReceiptsView implements IFilesForReceiptsView {
         data["id"] = this.id;
         data["name"] = this.name;
         data["createdDate"] = this.createdDate ? this.createdDate.toISOString() : <any>undefined;
-        data["mime"] = this.mime;
+        data["size"] = this.size;
         data["fileName"] = this.fileName;
         return data;
     }
@@ -415,7 +414,7 @@ export interface IFilesForReceiptsView {
     id?: string;
     name?: string | undefined;
     createdDate?: Date;
-    mime?: string | undefined;
+    size?: number;
     fileName?: string | undefined;
 }
 
@@ -573,6 +572,42 @@ export interface IReceiptWithFullInfo {
     createdDate?: Date;
     instances?: InstanceView[] | undefined;
     files?: FilesForReceiptsView[] | undefined;
+}
+
+export class UploadCommandResult implements IUploadCommandResult {
+    id?: string;
+
+    constructor(data?: IUploadCommandResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+        }
+    }
+
+    static fromJS(data: any): UploadCommandResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadCommandResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        return data;
+    }
+}
+
+export interface IUploadCommandResult {
+    id?: string;
 }
 
 export interface FileParameter {
